@@ -4,7 +4,6 @@ import 'package:silent_signal/database/manager.dart';
 import 'package:silent_signal/models/group.dart';
 import 'package:silent_signal/models/sensitive_user.dart';
 import 'package:silent_signal/models/user.dart';
-import 'package:silent_signal/utils/decoder.dart';
 
 class SensitiveUserRepository {
   Future<bool> create(
@@ -51,10 +50,9 @@ class SensitiveUserRepository {
         picture: row[4] as String?,
         createdAt: row[5] as DateTime,
       );
-      final contacts = decodeBytes(row[6] as UndecodedBytes);
-      if (contacts != null) {
-        final list = contacts as List<Map<String, dynamic>>;
-        for (var element in list) {
+      if (row[6] != null) {
+        final list = row[6] as List<dynamic>;
+        for (final element in list) {
           user.contacts.add(
             User(
               name: element['name'],
@@ -63,10 +61,9 @@ class SensitiveUserRepository {
           );
         }
       }
-      final createdGroups = decodeBytes(row[7] as UndecodedBytes);
-      if (createdGroups != null) {
-        final list = createdGroups as List<Map<String, dynamic>>;
-        for (var element in list) {
+      if (row[7] != null) {
+        final list = row[7] as List<dynamic>;
+        for (final element in list) {
           user.createdGroups.add(
             Group(
               id: element['id'],
@@ -82,10 +79,9 @@ class SensitiveUserRepository {
           );
         }
       }
-      final parcipateGroups = decodeBytes(row[8] as UndecodedBytes);
-      if (parcipateGroups != null) {
-        final list = parcipateGroups as List<Map<String, dynamic>>;
-        for (var element in list) {
+      if (row[8] != null) {
+        final list = row[8] as List<dynamic>;
+        for (final element in list) {
           user.parcipateGroups.add(
             Group(
               id: element['id'],
@@ -118,7 +114,7 @@ class SensitiveUserRepository {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
-      var result = await conn.execute(
+      final result = await conn.execute(
         FETCH_USER_BY_CREDENTIALS,
         parameters: [username, password],
       );
@@ -147,7 +143,7 @@ class SensitiveUserRepository {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
-      var result = await conn.execute(
+      final result = await conn.execute(
         FETCH_USER_BY_HASH,
         parameters: [hash],
       );
@@ -176,7 +172,7 @@ class SensitiveUserRepository {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
-      var result = await conn.execute(
+      final result = await conn.execute(
         FETCH_USER_BY_USERNAME,
         parameters: [username],
       );

@@ -171,7 +171,7 @@ class UploadController {
       final stream = request.cast<List<int>>().transform(transformer);
 
       String? url;
-      await for (var part in stream) {
+      await for (final part in stream) {
         final disposition = part.headers['content-disposition'];
         if (disposition == null) continue;
 

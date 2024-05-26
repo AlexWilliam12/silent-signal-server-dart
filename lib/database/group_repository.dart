@@ -1,9 +1,10 @@
+import 'dart:convert';
+
 import 'package:postgres/postgres.dart';
 import 'package:silent_signal/consts/group_consts.dart';
 import 'package:silent_signal/database/manager.dart';
 import 'package:silent_signal/models/group.dart';
 import 'package:silent_signal/models/user.dart';
-import 'package:silent_signal/utils/decoder.dart';
 
 class GroupRepository {
   Future<bool> create(
@@ -34,12 +35,10 @@ class GroupRepository {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
-      var result = await conn.execute(FETCH_GROUPS);
+      final result = await conn.execute(FETCH_GROUPS);
       List<Group> groups = [];
-      for (var row in result) {
-        final creator = decodeBytes(
-          row[4] as UndecodedBytes,
-        ) as Map<String, dynamic>;
+      for (final row in result) {
+        final creator = jsonDecode(row[4].toString());
         groups.add(
           Group(
             id: row[0] as int,
@@ -68,7 +67,7 @@ class GroupRepository {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
-      var result = await conn.execute(
+      final result = await conn.execute(
         FETCH_GROUP_BY_NAME,
         parameters: [groupName],
       );
@@ -76,9 +75,7 @@ class GroupRepository {
       if (row == null) {
         return null;
       }
-      final creator = decodeBytes(
-        row[4] as UndecodedBytes,
-      ) as Map<String, dynamic>;
+      final creator = jsonDecode(row[4].toString());
       return Group(
         id: row[0] as int,
         name: row[1] as String,
@@ -106,7 +103,7 @@ class GroupRepository {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
-      var result = await conn.execute(
+      final result = await conn.execute(
         FETCH_GROUP_BY_NAME_AND_CREATOR,
         parameters: [groupName, creatorId],
       );
@@ -114,9 +111,7 @@ class GroupRepository {
       if (row == null) {
         return null;
       }
-      final creator = decodeBytes(
-        row[4] as UndecodedBytes,
-      ) as Map<String, dynamic>;
+      final creator = jsonDecode(row[4].toString());
       return Group(
         id: row[0] as int,
         name: row[1] as String,

@@ -21,7 +21,7 @@ class Server {
       'Server is running at http://${server.address.address}:${server.port}',
     );
 
-    await for (var request in server) {
+    await for (final request in server) {
       _handleRequest(request);
     }
   }
@@ -35,7 +35,11 @@ class Server {
       );
       switch (method) {
         case HttpMethod.GET:
-          await handler.handleGet(request);
+          if (request.headers.value('upgrade') == 'websocket') {
+            await handler.handleRequest(request);
+          } else {
+            await handler.handleGet(request);
+          }
           break;
         case HttpMethod.POST:
           await handler.handlePost(request);
@@ -82,8 +86,8 @@ class Server {
       '/upload/chat/group ${HttpMethod.POST.name}': UploadHandler(),
       '/upload/picture/user ${HttpMethod.PUT.name}': UploadHandler(),
       '/upload/picture/group ${HttpMethod.PUT.name}': UploadHandler(),
-      '/chat/private': WebsocketHandler(),
-      '/chat/group': WebsocketHandler(),
+      '/chat/private ${HttpMethod.GET.name}': WebsocketHandler(),
+      '/chat/group ${HttpMethod.GET.name}': WebsocketHandler(),
     };
   }
 }

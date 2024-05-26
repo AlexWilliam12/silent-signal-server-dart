@@ -8,9 +8,9 @@ class ConnectionManager {
   static Future<void> executeMigration() async {
     Connection? conn;
     try {
-      List<String> queries = ConnectionManager._readScript();
+      final queries = ConnectionManager._readScript();
       conn = await ConnectionManager.getConnection();
-      for (String query in queries) {
+      for (final query in queries) {
         await conn.execute(query);
       }
     } finally {
@@ -40,8 +40,8 @@ class ConnectionManager {
   }
 
   static List<String> _readScript() {
-    File file = File('script/migration.sql');
-    String script = file.readAsStringSync();
+    final file = File('script/migration.sql');
+    final script = file.readAsStringSync();
     return script.split(';');
   }
 }
