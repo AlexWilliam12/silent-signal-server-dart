@@ -10,8 +10,7 @@ class UserHandler extends HttpHandler {
   Future<void> handleGet(HttpRequest request) async {
     final claims = await doFilter(request);
     if (claims != null) {
-      final response = await controller.fetch(request, claims);
-      await response.close();
+      await controller.fetch(request, claims);
     }
   }
 
@@ -19,8 +18,7 @@ class UserHandler extends HttpHandler {
   Future<void> handlePost(HttpRequest request) async {
     final claims = await doFilter(request);
     if (claims != null) {
-      final response = await controller.saveContact(request, claims);
-      await response.close();
+      await controller.saveContact(request, claims);
     }
   }
 
@@ -28,8 +26,7 @@ class UserHandler extends HttpHandler {
   Future<void> handlePut(HttpRequest request) async {
     final claims = await doFilter(request);
     if (claims != null) {
-      final response = await controller.update(request, claims);
-      await response.close();
+      await controller.update(request, claims);
     }
   }
 
@@ -37,8 +34,7 @@ class UserHandler extends HttpHandler {
   Future<void> handleDelete(HttpRequest request) async {
     final claims = await doFilter(request);
     if (claims != null) {
-      final response = await controller.delete(request, claims);
-      await response.close();
+      await controller.delete(request, claims);
     }
   }
 }

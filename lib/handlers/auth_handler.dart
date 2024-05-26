@@ -10,20 +10,16 @@ class AuthHandler extends HttpHandler {
     final controller = AuthController();
     switch (path) {
       case '/auth/login':
-        final response = await controller.login(request);
-        await response.close();
+        await controller.login(request);
         break;
       case '/auth/register':
-        final response = await controller.register(request);
-        await response.close();
+        await controller.register(request);
         break;
       case '/auth/validate-token':
-        final response = await controller.validateToken(request);
-        await response.close();
+        await controller.validateToken(request);
         break;
       case '/auth/validate-hash':
-        final response = await controller.validateHash(request);
-        await response.close();
+        await controller.validateHash(request);
         break;
       default:
         request.response

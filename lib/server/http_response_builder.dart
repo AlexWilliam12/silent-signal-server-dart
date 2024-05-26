@@ -8,23 +8,39 @@ class HttpResponseBuilder {
     return HttpResponseBuilder._(response);
   }
 
-  HttpResponse ok(int code, {String? body}) {
+  HttpResponseBuilder ok(int code, {String? body}) {
     if (body != null) {
-      return response
+      response
         ..statusCode = code
         ..headers.add('Content-Type', 'application/json')
-        ..write('$body\n');
+        ..write('$body\n')
+        ..close();
+    } else {
+      response
+        ..statusCode = code
+        ..close();
     }
-    return response..statusCode = code;
+    return this;
   }
 
-  HttpResponse error(int code, {String? body}) {
+  HttpResponseBuilder error(int code, {String? body}) {
     if (body != null) {
-      return response
+      response
         ..statusCode = code
         ..headers.add('Content-Type', 'text/plain')
-        ..write('$body\n');
+        ..write('$body\n')
+        ..close();
+    } else {
+      response
+        ..statusCode = code
+        ..close();
     }
-    return response..statusCode = code;
+    return this;
+  }
+
+  Future<HttpResponseBuilder> file(String mimeType, File file) async {
+    response.headers.contentType = ContentType.parse(mimeType);
+    await file.openRead().pipe(response);
+    return this;
   }
 }

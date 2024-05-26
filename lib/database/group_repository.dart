@@ -43,7 +43,7 @@ class GroupRepository {
         groups.add(
           Group(
             id: row[0] as int,
-            groupName: row[1] as String,
+            name: row[1] as String,
             description: row[2] as String?,
             picture: row[3] as String?,
             creator: User(
@@ -81,7 +81,45 @@ class GroupRepository {
       ) as Map<String, dynamic>;
       return Group(
         id: row[0] as int,
-        groupName: row[1] as String,
+        name: row[1] as String,
+        description: row[2] as String?,
+        picture: row[3] as String?,
+        creator: User(
+          name: creator['name'],
+          picture: creator['picture'],
+        ),
+        createdAt: row[5] as DateTime,
+      );
+    } catch (e) {
+      rethrow;
+    } finally {
+      if (conn != null) {
+        await conn.close();
+      }
+    }
+  }
+
+  Future<Group?> fetchByGroupNameAndCreator(
+    String groupName,
+    int creatorId,
+  ) async {
+    Connection? conn;
+    try {
+      conn = await ConnectionManager.getConnection();
+      var result = await conn.execute(
+        FETCH_GROUP_BY_NAME_AND_CREATOR,
+        parameters: [groupName, creatorId],
+      );
+      final row = result.firstOrNull;
+      if (row == null) {
+        return null;
+      }
+      final creator = decodeBytes(
+        row[4] as UndecodedBytes,
+      ) as Map<String, dynamic>;
+      return Group(
+        id: row[0] as int,
+        name: row[1] as String,
         description: row[2] as String?,
         picture: row[3] as String?,
         creator: User(
@@ -108,7 +146,7 @@ class GroupRepository {
           UPDATE_GROUP,
           parameters: {
             'id': group.id,
-            'group_name': group.groupName,
+            'group_name': group.name,
             'description': group.description,
             'picture': group.picture,
             'creator_id': creatorId,

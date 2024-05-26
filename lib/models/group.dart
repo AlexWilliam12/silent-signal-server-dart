@@ -3,7 +3,7 @@ import 'package:silent_signal/models/user.dart';
 
 class Group {
   late int id;
-  late String groupName;
+  late String name;
   late String? description;
   late String? picture;
   late User creator;
@@ -13,7 +13,7 @@ class Group {
 
   Group({
     required this.id,
-    required this.groupName,
+    required this.name,
     required this.description,
     required this.picture,
     required this.creator,
@@ -23,7 +23,7 @@ class Group {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'group_name': groupName,
+      'name': name,
       'description': description,
       'picture': picture,
       'creator': creator,

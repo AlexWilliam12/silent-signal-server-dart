@@ -10,42 +10,7 @@ class UploadHandler extends HttpHandler {
   Future<void> handleGet(HttpRequest request) async {
     final claims = await doFilter(request);
     if (claims != null) {
-      final path = request.uri.path;
-      switch (path) {
-        case '/upload/picture/user':
-          final response = await controller.fetchUserPicture(
-            request,
-            claims,
-          );
-          await response.close();
-          break;
-        case '/upload/picture/group':
-          final response = await controller.fetchGroupPicture(
-            request,
-            claims,
-          );
-          await response.close();
-          break;
-        case '/upload/chat/user':
-          final response = await controller.fetchPrivateChatPicture(
-            request,
-            claims,
-          );
-          await response.close();
-          break;
-        case '/upload/chat/group':
-          final response = await controller.fetchGroupChatPicture(
-            request,
-            claims,
-          );
-          await response.close();
-          break;
-        default:
-          request.response
-            ..statusCode = HttpStatus.notFound
-            ..write('Route Not Found')
-            ..close();
-      }
+      await controller.fetchFile(request);
     }
   }
 
@@ -56,32 +21,16 @@ class UploadHandler extends HttpHandler {
       final path = request.uri.path;
       switch (path) {
         case '/upload/picture/user':
-          final response = await controller.uploadUserPicture(
-            request,
-            claims,
-          );
-          await response.close();
+          await controller.uploadUserPicture(request, claims);
           break;
         case '/upload/picture/group':
-          final response = await controller.uploadGroupPicture(
-            request,
-            claims,
-          );
-          await response.close();
+          await controller.uploadGroupPicture(request, claims);
           break;
         case '/upload/chat/user':
-          final response = await controller.uploadPrivateChatPicture(
-            request,
-            claims,
-          );
-          await response.close();
+          await controller.uploadPrivateChatFile(request, claims);
           break;
         case '/upload/chat/group':
-          final response = await controller.uploadGroupChatPicture(
-            request,
-            claims,
-          );
-          await response.close();
+          await controller.uploadGroupChatFile(request, claims);
           break;
         default:
           request.response
@@ -99,8 +48,16 @@ class UploadHandler extends HttpHandler {
       final path = request.uri.path;
       switch (path) {
         case '/upload/picture/user':
+          await controller.uploadUserPicture(request, claims);
           break;
         case '/upload/picture/group':
+          await controller.uploadGroupPicture(request, claims);
+          break;
+        case '/upload/chat/user':
+          await controller.uploadPrivateChatFile(request, claims);
+          break;
+        case '/upload/chat/group':
+          await controller.uploadGroupChatFile(request, claims);
           break;
         default:
           request.response

@@ -9,7 +9,7 @@ import 'package:silent_signal/utils/jwt.dart';
 class AuthController {
   final repository = SensitiveUserRepository();
 
-  Future<HttpResponse> login(HttpRequest request) async {
+  Future<HttpResponseBuilder> login(HttpRequest request) async {
     try {
       final body = await utf8.decoder.bind(request).join();
       final json = jsonDecode(body);
@@ -20,7 +20,7 @@ class AuthController {
       return user != null
           ? HttpResponseBuilder.send(request.response).ok(
               HttpStatus.ok,
-              body: jsonEncode({'token': generateJWT(user.username)}),
+              body: jsonEncode({'token': generateJWT(user.name)}),
             )
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.notFound,
@@ -34,7 +34,7 @@ class AuthController {
     }
   }
 
-  Future<HttpResponse> register(HttpRequest request) async {
+  Future<HttpResponseBuilder> register(HttpRequest request) async {
     try {
       final body = await utf8.decoder.bind(request).join();
       final json = jsonDecode(body);
@@ -57,7 +57,7 @@ class AuthController {
     }
   }
 
-  Future<HttpResponse> validateToken(HttpRequest request) async {
+  Future<HttpResponseBuilder> validateToken(HttpRequest request) async {
     try {
       final header = request.headers['Authorization'];
       if (header == null) {
@@ -82,7 +82,7 @@ class AuthController {
     }
   }
 
-  Future<HttpResponse> validateHash(HttpRequest request) async {
+  Future<HttpResponseBuilder> validateHash(HttpRequest request) async {
     try {
       final body = await utf8.decoder.bind(request).join();
       final json = jsonDecode(body);
@@ -90,7 +90,7 @@ class AuthController {
       return user != null
           ? HttpResponseBuilder.send(request.response).ok(
               HttpStatus.ok,
-              body: jsonEncode({'token': generateJWT(user.username)}),
+              body: jsonEncode({'token': generateJWT(user.name)}),
             )
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.notFound,

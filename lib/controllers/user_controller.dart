@@ -7,12 +7,12 @@ import 'package:silent_signal/server/http_response_builder.dart';
 class UserController {
   final repository = SensitiveUserRepository();
 
-  Future<HttpResponse> fetch(
+  Future<HttpResponseBuilder> fetch(
     HttpRequest request,
     Map<String, dynamic> claims,
   ) async {
     try {
-      final user = await repository.fetchByUsername(claims['username']);
+      final user = await repository.fetchData(claims['username']);
       if (user != null) {
         return HttpResponseBuilder.send(request.response).ok(
           HttpStatus.ok,
@@ -32,7 +32,7 @@ class UserController {
     }
   }
 
-  Future<HttpResponse> update(
+  Future<HttpResponseBuilder> update(
     HttpRequest request,
     Map<String, dynamic> claims,
   ) async {
@@ -46,7 +46,7 @@ class UserController {
       }
       final body = await utf8.decoder.bind(request).join();
       final json = jsonDecode(body);
-      user.username = json['username'] ?? user.username;
+      user.name = json['username'] ?? user.name;
       user.password = json['password'] ?? user.password;
       user.picture = json['picture'] ?? user.picture;
       return await repository.update(user)
@@ -65,7 +65,7 @@ class UserController {
     }
   }
 
-  Future<HttpResponse> delete(
+  Future<HttpResponseBuilder> delete(
     HttpRequest request,
     Map<String, dynamic> claims,
   ) async {
@@ -86,7 +86,7 @@ class UserController {
     }
   }
 
-  Future<HttpResponse> saveContact(
+  Future<HttpResponseBuilder> saveContact(
     HttpRequest request,
     Map<String, dynamic> claims,
   ) async {

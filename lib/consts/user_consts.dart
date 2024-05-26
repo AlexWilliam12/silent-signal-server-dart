@@ -25,40 +25,65 @@ SELECT
 			) AS c
 		) AS contacts,
 		ARRAY(
-			SELECT JSON_BUILD_OBJECT(
-        'id',
-        m.id,
-				'type',
-				m.type,
-				'content',
-				m.content,
-				'createdAt',
-				m.created_at,
-				'sender_name',
-				m.sender_username,
-				'senderPicture',
-				m.sender_picture,
-				'recipient_name',
-				m.recipient_username,
-				'recipientPicture',
-				m.recipient_picture
-			)
-			FROM (
-				SELECT
-          pv.id,
-					pv.type,
-					pv.content,
-					pv.created_at,
-					s.username AS sender_username,
-          s.picture AS sender_picture,
-          r.username AS recipient_username,
-          r.picture AS recipient_picture
-				FROM private_messages pv
-				LEFT JOIN users s ON pv.sender_id = s.id
-				LEFT JOIN users r ON pv.recipient_id = r.id
-				WHERE u.id = pv.sender_id OR u.id = pv.recipient_id
-			) AS m
-		) AS messages
+      SELECT JSON_BUILD_OBJECT(
+          'id',
+          cg.id,
+          'group_name',
+          cg.group_name,
+          'description',
+          cg.description,
+          'group_picture',
+          cg.group_picture,
+          'created_at',
+          cg.created_at,
+          'creator_name',
+          u.username,
+          'creator_picture',
+          u.picture
+      )
+      FROM (
+        SELECT
+          g.id,
+          g.group_name,
+          g.description,
+          g.picture AS group_picture,
+          g.created_at
+        FROM groups g
+        WHERE g.creator_id = u.id
+      ) AS cg
+    ) AS created_groups,
+    ARRAY(
+      SELECT JSON_BUILD_OBJECT(
+          'id',
+          pg.id,
+          'group_name',
+          pg.group_name,
+          'description',
+          pg.description,
+          'group_picture',
+          pg.group_picture,
+          'created_at',
+          pg.created_at,
+          'creator_name',
+          pg.username,
+          'creator_picture',
+          pg.creator_picture
+      )
+      FROM (
+        SELECT
+          g.id,
+          g.group_name,
+          g.description,
+          g.picture AS group_picture,
+          g.created_at,
+          c.username,
+          c.picture AS creator_picture
+        FROM groups g
+        INNER JOIN group_members gm
+        ON g.id = gm.group_id AND u.id = gm.user_id
+        INNER JOIN users c ON c.id = g.creator_id
+      ) AS pg
+    ) AS parcipate_groups
 	FROM users u
 	WHERE u.username = $1
 ''';
@@ -116,7 +141,11 @@ const UPDATE_USER = '''
   WHERE id = @id
 ''';
 
-const DELETE_USER = r'DELETE FROM users WHERE username = $1';
+const DELETE_USER = r'''
+  UPDATE users SET
+    deleted_at = CURRENT_TIMESTAMP
+  WHERE id = $1
+''';
 
 const SAVE_USE_CONTACT = r'''
   INSERT INTO contacts(

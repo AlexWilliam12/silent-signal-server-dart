@@ -1,7 +1,10 @@
 import 'package:postgres/postgres.dart';
 import 'package:silent_signal/consts/user_consts.dart';
 import 'package:silent_signal/database/manager.dart';
+import 'package:silent_signal/models/group.dart';
 import 'package:silent_signal/models/sensitive_user.dart';
+import 'package:silent_signal/models/user.dart';
+import 'package:silent_signal/utils/decoder.dart';
 
 class SensitiveUserRepository {
   Future<bool> create(
@@ -28,62 +31,85 @@ class SensitiveUserRepository {
     }
   }
 
-  // Future<SensitiveUser?> fetchData(String username) async {
-  //   Connection? conn;
-  //   try {
-  //     conn = await ConnectionManager.getConnection();
-  //     final result = await conn.execute(
-  //       FETCH_USER_DATA_QUERY,
-  //       parameters: [username],
-  //     );
-  //     final row = result.firstOrNull;
-  //     if (row == null) {
-  //       return null;
-  //     }
-  //     final user = SensitiveUser(
-  //       id: row[0] as int,
-  //       username: row[1] as String,
-  //       password: row[2] as String,
-  //       credentialsHash: row[3] as String,
-  //       picture: row[4] as String?,
-  //       createdAt: row[5] as DateTime,
-  //     );
-  //     final contacts = decodeBytes(row[6] as UndecodedBytes);
-  //     if (contacts != null) {
-  //       final list = contacts as List<Map<String, dynamic>>;
-  //       for (var element in list) {
-  //         user.contacts.add(
-  //           User(
-  //             name: element['name'],
-  //             picture: element['picture'],
-  //           ),
-  //         );
-  //       }
-  //     }
-  //     final messages = decodeBytes(row[7] as UndecodedBytes);
-  //     if (messages != null) {
-  //       var list = messages as List<Map<String, dynamic>>;
-  //       for (var element in list) {
-  //         user.messages.add(
-  //           PrivateMessage(
-  //             id: int.parse(element['id']),
-  //             type: element['type'],
-  //             content: element['content'],
-  //             isPending: element['is_pending'],
-  //             createdAt: createdAt,
-  //             sender: sender,
-  //             recipient: recipient,
-  //           ),
-  //         );
-  //       }
-  //     }
-  //     return user;
-  //   } finally {
-  //     if (conn != null) {
-  //       await conn.close();
-  //     }
-  //   }
-  // }
+  Future<SensitiveUser?> fetchData(String username) async {
+    Connection? conn;
+    try {
+      conn = await ConnectionManager.getConnection();
+      final result = await conn.execute(
+        FETCH_USER_DATA_QUERY,
+        parameters: [username],
+      );
+      final row = result.firstOrNull;
+      if (row == null) {
+        return null;
+      }
+      final user = SensitiveUser(
+        id: row[0] as int,
+        name: row[1] as String,
+        password: row[2] as String,
+        credentialsHash: row[3] as String,
+        picture: row[4] as String?,
+        createdAt: row[5] as DateTime,
+      );
+      final contacts = decodeBytes(row[6] as UndecodedBytes);
+      if (contacts != null) {
+        final list = contacts as List<Map<String, dynamic>>;
+        for (var element in list) {
+          user.contacts.add(
+            User(
+              name: element['name'],
+              picture: element['picture'],
+            ),
+          );
+        }
+      }
+      final createdGroups = decodeBytes(row[7] as UndecodedBytes);
+      if (createdGroups != null) {
+        final list = createdGroups as List<Map<String, dynamic>>;
+        for (var element in list) {
+          user.createdGroups.add(
+            Group(
+              id: element['id'],
+              name: element['group_name'],
+              description: element['description'],
+              picture: element['group_picture'],
+              creator: User(
+                name: element['creator_name'],
+                picture: element['creator_picture'],
+              ),
+              createdAt: element['created_at'],
+            ),
+          );
+        }
+      }
+      final parcipateGroups = decodeBytes(row[8] as UndecodedBytes);
+      if (parcipateGroups != null) {
+        final list = parcipateGroups as List<Map<String, dynamic>>;
+        for (var element in list) {
+          user.parcipateGroups.add(
+            Group(
+              id: element['id'],
+              name: element['group_name'],
+              description: element['description'],
+              picture: element['group_picture'],
+              creator: User(
+                name: element['creator_name'],
+                picture: element['creator_picture'],
+              ),
+              createdAt: element['created_at'],
+            ),
+          );
+        }
+      }
+      return user;
+    } catch (e) {
+      rethrow;
+    } finally {
+      if (conn != null) {
+        await conn.close();
+      }
+    }
+  }
 
   Future<SensitiveUser?> fetchByCredentials(
     String username,
@@ -102,7 +128,7 @@ class SensitiveUserRepository {
       }
       return SensitiveUser(
         id: row[0] as int,
-        username: row[1] as String,
+        name: row[1] as String,
         password: row[2] as String,
         credentialsHash: row[3] as String,
         picture: row[4] as String?,
@@ -131,7 +157,7 @@ class SensitiveUserRepository {
       }
       return SensitiveUser(
         id: row[0] as int,
-        username: row[1] as String,
+        name: row[1] as String,
         password: row[2] as String,
         credentialsHash: row[3] as String,
         picture: row[4] as String?,
@@ -160,7 +186,7 @@ class SensitiveUserRepository {
       }
       return SensitiveUser(
         id: row[0] as int,
-        username: row[1] as String,
+        name: row[1] as String,
         password: row[2] as String,
         credentialsHash: row[3] as String,
         picture: row[4] as String?,
@@ -184,7 +210,7 @@ class SensitiveUserRepository {
           Sql.named(UPDATE_USER),
           parameters: {
             'id': user.id,
-            'username': user.username,
+            'username': user.name,
             'password': user.password,
             'credentials_hash': user.credentialsHash,
             'picture': user.picture,
