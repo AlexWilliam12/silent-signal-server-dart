@@ -6,14 +6,16 @@ const FETCH_GROUPS = '''
     g.group_name,
     g.description,
     g.picture,
-    (SELECT JSON_AGG(JSON_BUILD_OBJECT(
-      'name',
-      c.username,
-      'picture',
-      c.picture,
-    ))
-    FROM users c
-    WHERE c.id = g.creator_id) AS creator,
+    (
+      SELECT JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'name',
+          c.username,
+          'picture',
+          c.picture,
+        )
+      ) FROM users c WHERE c.id = g.creator_id
+    ) AS creator,
     g.created_at
   FROM groups g
 ''';
@@ -28,9 +30,13 @@ const FETCH_GROUP_BY_NAME = r'''
       SELECT JSON_BUILD_OBJECT(
         'name', c.name,
         'picture', c.picture
-      )
-      FROM users c
-      WHERE c.id = g.creator_id
+      ) FROM (
+        SELECT
+          c.name,
+          c.picture
+        FROM users c
+        WHERE c.id = g.creator_id
+      ) AS c
     ) AS creator,
     g.created_at
   FROM groups g
@@ -47,9 +53,13 @@ const FETCH_GROUP_BY_NAME_AND_CREATOR = r'''
       SELECT JSON_BUILD_OBJECT(
         'name', c.name,
         'picture', c.picture
-      )
-      FROM users c
-      WHERE c.id = g.creator_id
+      ) FROM (
+        SELECT
+          c.name,
+          c.picture
+        FROM users c
+        WHERE c.id = g.creator_id
+      ) AS c
     ) AS creator,
     g.created_at
   FROM groups g

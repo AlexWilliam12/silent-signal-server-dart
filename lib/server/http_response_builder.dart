@@ -23,6 +23,14 @@ class HttpResponseBuilder {
     return this;
   }
 
+  HttpResponseBuilder created(String path) {
+    response
+      ..statusCode = HttpStatus.created
+      ..headers.set(HttpHeaders.locationHeader, Uri.parse(path).toString())
+      ..close();
+    return this;
+  }
+
   HttpResponseBuilder error(int code, {String? body}) {
     if (body != null) {
       response

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:silent_signal/database/user_repository.dart';
+import 'package:silent_signal/models/sensitive_user.dart';
 import 'package:silent_signal/server/http_response_builder.dart';
 import 'package:silent_signal/utils/hash.dart';
 import 'package:silent_signal/utils/jwt.dart';
@@ -24,7 +25,7 @@ class AuthController {
             )
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.notFound,
-              body: 'User Not Found',
+              body: 'user not found',
             );
     } catch (e) {
       return HttpResponseBuilder.send(request.response).error(
@@ -39,15 +40,20 @@ class AuthController {
       final body = await utf8.decoder.bind(request).join();
       final json = jsonDecode(body);
       final isCreated = await repository.create(
-        json['username'],
-        json['password'],
-        generateCredentialsHash(json['username'], json['password']),
+        SensitiveUser.dto(
+          name: json['username'],
+          password: json['password'],
+          credentialsHash: generateCredentialsHash(
+            json['username'],
+            json['password'],
+          ),
+        ),
       );
       return isCreated
           ? HttpResponseBuilder.send(request.response).ok(HttpStatus.ok)
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.internalServerError,
-              body: 'User Not Created',
+              body: 'user not created',
             );
     } catch (e) {
       return HttpResponseBuilder.send(request.response).error(
@@ -63,14 +69,14 @@ class AuthController {
       if (header == null) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.forbidden,
-          body: 'Forbidden',
+          body: 'forbidden',
         );
       }
       final token = header.first.substring(7).trim();
       if (!validateJWT(token)) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.unauthorized,
-          body: 'Unauthorized Request',
+          body: 'unauthorized request',
         );
       }
       return HttpResponseBuilder.send(request.response).ok(HttpStatus.ok);

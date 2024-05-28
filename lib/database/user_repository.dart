@@ -6,18 +6,14 @@ import 'package:silent_signal/models/sensitive_user.dart';
 import 'package:silent_signal/models/user.dart';
 
 class SensitiveUserRepository {
-  Future<bool> create(
-    String username,
-    String password,
-    String credentialsHash,
-  ) async {
+  Future<bool> create(SensitiveUser user) async {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
       return await conn.runTx((session) async {
         final result = await session.execute(
           CREATE_USER,
-          parameters: [username, password, credentialsHash],
+          parameters: [user.name, user.password, user.credentialsHash],
         );
         return result.affectedRows > 0;
       });
@@ -42,7 +38,7 @@ class SensitiveUserRepository {
       if (row == null) {
         return null;
       }
-      final user = SensitiveUser(
+      final user = SensitiveUser.model(
         id: row[0] as int,
         name: row[1] as String,
         password: row[2] as String,
@@ -54,7 +50,7 @@ class SensitiveUserRepository {
         final list = row[6] as List<dynamic>;
         for (final element in list) {
           user.contacts.add(
-            User(
+            User.dto(
               name: element['name'],
               picture: element['picture'],
             ),
@@ -65,12 +61,12 @@ class SensitiveUserRepository {
         final list = row[7] as List<dynamic>;
         for (final element in list) {
           user.createdGroups.add(
-            Group(
+            Group.model(
               id: element['id'],
               name: element['group_name'],
               description: element['description'],
               picture: element['group_picture'],
-              creator: User(
+              creator: User.dto(
                 name: element['creator_name'],
                 picture: element['creator_picture'],
               ),
@@ -83,12 +79,12 @@ class SensitiveUserRepository {
         final list = row[8] as List<dynamic>;
         for (final element in list) {
           user.parcipateGroups.add(
-            Group(
+            Group.model(
               id: element['id'],
               name: element['group_name'],
               description: element['description'],
               picture: element['group_picture'],
-              creator: User(
+              creator: User.dto(
                 name: element['creator_name'],
                 picture: element['creator_picture'],
               ),
@@ -122,7 +118,7 @@ class SensitiveUserRepository {
       if (row == null) {
         return null;
       }
-      return SensitiveUser(
+      return SensitiveUser.model(
         id: row[0] as int,
         name: row[1] as String,
         password: row[2] as String,
@@ -139,19 +135,19 @@ class SensitiveUserRepository {
     }
   }
 
-  Future<SensitiveUser?> fetchByHash(String hash) async {
+  Future<SensitiveUser?> fetchByHash(String credentialsHash) async {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
       final result = await conn.execute(
         FETCH_USER_BY_HASH,
-        parameters: [hash],
+        parameters: [credentialsHash],
       );
       final row = result.firstOrNull;
       if (row == null) {
         return null;
       }
-      return SensitiveUser(
+      return SensitiveUser.model(
         id: row[0] as int,
         name: row[1] as String,
         password: row[2] as String,
@@ -180,7 +176,7 @@ class SensitiveUserRepository {
       if (row == null) {
         return null;
       }
-      return SensitiveUser(
+      return SensitiveUser.model(
         id: row[0] as int,
         name: row[1] as String,
         password: row[2] as String,
@@ -223,14 +219,14 @@ class SensitiveUserRepository {
     }
   }
 
-  Future<bool> delete(String username) async {
+  Future<bool> delete(int userId) async {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
       return await conn.runTx((session) async {
         final result = await session.execute(
           DELETE_USER,
-          parameters: [username],
+          parameters: [userId],
         );
         return result.affectedRows > 0;
       });

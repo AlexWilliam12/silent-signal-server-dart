@@ -7,18 +7,14 @@ import 'package:silent_signal/models/group.dart';
 import 'package:silent_signal/models/user.dart';
 
 class GroupRepository {
-  Future<bool> create(
-    String groupName,
-    String description,
-    int creatorId,
-  ) async {
+  Future<bool> create(Group group) async {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
       return await conn.runTx((session) async {
         final result = await session.execute(
           CREATE_GROUP,
-          parameters: [groupName, description, creatorId],
+          parameters: [group.name, group.description, group.creator.id!],
         );
         return result.affectedRows > 0;
       });
@@ -40,12 +36,12 @@ class GroupRepository {
       for (final row in result) {
         final creator = jsonDecode(row[4].toString());
         groups.add(
-          Group(
+          Group.model(
             id: row[0] as int,
             name: row[1] as String,
             description: row[2] as String?,
             picture: row[3] as String?,
-            creator: User(
+            creator: User.dto(
               name: creator['name'],
               picture: creator['picture'],
             ),
@@ -76,12 +72,12 @@ class GroupRepository {
         return null;
       }
       final creator = jsonDecode(row[4].toString());
-      return Group(
+      return Group.model(
         id: row[0] as int,
         name: row[1] as String,
         description: row[2] as String?,
         picture: row[3] as String?,
-        creator: User(
+        creator: User.dto(
           name: creator['name'],
           picture: creator['picture'],
         ),
@@ -112,12 +108,12 @@ class GroupRepository {
         return null;
       }
       final creator = jsonDecode(row[4].toString());
-      return Group(
+      return Group.model(
         id: row[0] as int,
         name: row[1] as String,
         description: row[2] as String?,
         picture: row[3] as String?,
-        creator: User(
+        creator: User.dto(
           name: creator['name'],
           picture: creator['picture'],
         ),
@@ -132,7 +128,7 @@ class GroupRepository {
     }
   }
 
-  Future<bool> update(Group group, int creatorId) async {
+  Future<bool> update(Group group) async {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
@@ -144,7 +140,7 @@ class GroupRepository {
             'group_name': group.name,
             'description': group.description,
             'picture': group.picture,
-            'creator_id': creatorId,
+            'creator_id': group.creator.id!,
           },
         );
         return result.affectedRows > 0;
@@ -158,14 +154,14 @@ class GroupRepository {
     }
   }
 
-  Future<bool> delete(String groupName) async {
+  Future<bool> delete(int groupId) async {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
       return await conn.runTx((session) async {
         final result = await session.execute(
           DELETE_GROUP,
-          parameters: [groupName],
+          parameters: [groupId],
         );
         return result.affectedRows > 0;
       });

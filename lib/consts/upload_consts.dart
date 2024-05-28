@@ -23,11 +23,3 @@ const SAVE_GROUP_CHAT_FILE = '''
     picture = @picture
   WHERE id = @id
 ''';
-
-const FETCH_USER_PICTURE = '''''';
-
-const FETCH_GROUP_PICTURE = '''''';
-
-const FETCH_USER_CHAT_FILE = '''''';
-
-const FETCH_GROUP_CHAT_FILE = '''''';

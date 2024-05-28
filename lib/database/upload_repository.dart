@@ -50,44 +50,4 @@ class UploadRepository {
       }
     }
   }
-
-  // Future<bool> savePrivateChatFile(int userId, int contactId) async {
-  //   Connection? conn;
-  //   try {
-  //     conn = await ConnectionManager.getConnection();
-  //     return await conn.runTx((session) async {
-  //       final result = await session.execute(
-  //         SAVE_USE_CONTACT,
-  //         parameters: [userId, contactId],
-  //       );
-  //       return result.affectedRows > 0;
-  //     });
-  //   } catch (e) {
-  //     rethrow;
-  //   } finally {
-  //     if (conn != null) {
-  //       await conn.close();
-  //     }
-  //   }
-  // }
-
-  // Future<bool> saveGroupChatFile(int userId, int contactId) async {
-  //   Connection? conn;
-  //   try {
-  //     conn = await ConnectionManager.getConnection();
-  //     return await conn.runTx((session) async {
-  //       final result = await session.execute(
-  //         SAVE_USE_CONTACT,
-  //         parameters: [userId, contactId],
-  //       );
-  //       return result.affectedRows > 0;
-  //     });
-  //   } catch (e) {
-  //     rethrow;
-  //   } finally {
-  //     if (conn != null) {
-  //       await conn.close();
-  //     }
-  //   }
-  // }
 }

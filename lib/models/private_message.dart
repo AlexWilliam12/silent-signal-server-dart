@@ -1,15 +1,23 @@
 import 'package:silent_signal/models/user.dart';
 
 class PrivateMessage {
-  late int id;
-  late String type;
-  late String content;
-  late bool isPending;
-  late DateTime createdAt;
-  late User sender;
-  late User recipient;
+  int? id;
+  String type;
+  String content;
+  bool isPending;
+  DateTime? createdAt;
+  User sender;
+  User recipient;
 
-  PrivateMessage({
+  PrivateMessage.dto({
+    required this.type,
+    required this.content,
+    required this.isPending,
+    required this.sender,
+    required this.recipient,
+  });
+
+  PrivateMessage.model({
     required this.id,
     required this.type,
     required this.content,
@@ -25,7 +33,7 @@ class PrivateMessage {
       'type': type,
       'content': content,
       'is_pending': isPending,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt!.toIso8601String(),
       'sender': sender,
       'recipient': recipient,
     };

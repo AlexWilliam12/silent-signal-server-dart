@@ -13,7 +13,7 @@ class MessageRepository {
     try {
       conn = await ConnectionManager.getConnection();
       final result = await conn.execute(
-        FETCH_ALL_PRIVATE_MESSAGES,
+        FETCH_ALL_PRIVATE_MESSAGES_BY_NAME,
         parameters: [username],
       );
       final list = <PrivateMessage>[];
@@ -21,17 +21,17 @@ class MessageRepository {
         final sender = jsonDecode(row[6] as String);
         final recipient = jsonDecode(row[7] as String);
         list.add(
-          PrivateMessage(
+          PrivateMessage.model(
             id: row[0] as int,
             type: row[1] as String,
             content: row[2] as String,
             isPending: row[3] as bool,
             createdAt: row[4] as DateTime,
-            sender: User(
+            sender: User.dto(
               name: sender['name'],
               picture: sender['picture'],
             ),
-            recipient: User(
+            recipient: User.dto(
               name: recipient['name'],
               picture: recipient['picture'],
             ),
@@ -129,6 +129,36 @@ class MessageRepository {
           parameters: [messageId],
         );
         return result.affectedRows > 0;
+      });
+    } catch (e) {
+      rethrow;
+    } finally {
+      if (conn != null) {
+        await conn.close();
+      }
+    }
+  }
+
+  Future<void> updatePrivateMessagePendingSituation(List<int> ids) async {
+    Connection? conn;
+    try {
+      final placeholder = List.generate(
+        ids.length,
+        (index) => '@p$index',
+      ).join(',');
+      Map<String, dynamic> values = {
+        for (var i = 0; i < ids.length; i++) 'p$i': ids[i],
+      };
+      conn = await ConnectionManager.getConnection();
+      return await conn.runTx((session) async {
+        await session.execute(
+          Sql.named('''
+            UPDATE private_messages SET
+                is_pending = FALSE
+              WHERE id IN ($placeholder)
+            '''),
+          parameters: values,
+        );
       });
     } catch (e) {
       rethrow;

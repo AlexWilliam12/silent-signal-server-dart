@@ -119,7 +119,7 @@ class UserController {
           body: "User '$parameter' Not Found",
         );
       }
-      return await repository.saveContact(user.id, contact.id)
+      return await repository.saveContact(user.id!, contact.id!)
           ? HttpResponseBuilder.send(request.response).ok(
               HttpStatus.ok,
             )

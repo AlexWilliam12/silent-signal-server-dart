@@ -1,12 +1,20 @@
 class User {
-  late int? id;
-  late String name;
-  late String? picture;
+  int? id;
+  String? name;
+  String? picture;
 
-  User({
+  User.dto({
     required this.name,
     required this.picture,
   });
+
+  User.model({
+    required this.id,
+    required this.name,
+    required this.picture,
+  });
+
+  User.id({required this.id});
 
   Map<String, dynamic> toJson() {
     return {

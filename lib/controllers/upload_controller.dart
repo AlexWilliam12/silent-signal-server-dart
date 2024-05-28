@@ -4,14 +4,19 @@ import 'dart:math';
 import 'package:mime/mime.dart';
 import 'package:silent_signal/configs/environment.dart';
 import 'package:silent_signal/database/group_repository.dart';
+import 'package:silent_signal/database/message_repository.dart';
 import 'package:silent_signal/database/upload_repository.dart';
 import 'package:silent_signal/database/user_repository.dart';
+import 'package:silent_signal/models/group_message.dart';
+import 'package:silent_signal/models/private_message.dart';
+import 'package:silent_signal/models/user.dart';
 import 'package:silent_signal/server/http_response_builder.dart';
 
 class UploadController {
   final uploadRepository = UploadRepository();
   final userRepository = SensitiveUserRepository();
   final groupRepository = GroupRepository();
+  final messageRepository = MessageRepository();
 
   Future<HttpResponseBuilder> uploadUserPicture(
     HttpRequest request,
@@ -22,7 +27,7 @@ class UploadController {
       if (user == null) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.notFound,
-          body: 'User Not Found',
+          body: 'user not found',
         );
       }
       if (user.picture != null) {
@@ -35,14 +40,14 @@ class UploadController {
       if (path == null) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.internalServerError,
-          body: 'Unable To Upload Picture',
+          body: 'unable to upload picture',
         );
       }
-      return await uploadRepository.saveUserPicture(user.id, path)
-          ? HttpResponseBuilder.send(request.response).ok(HttpStatus.ok)
+      return await uploadRepository.saveUserPicture(user.id!, path)
+          ? HttpResponseBuilder.send(request.response).created(path)
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.badRequest,
-              body: 'Unable To Upload Picture',
+              body: 'unable to upload picture',
             );
     } catch (e) {
       return HttpResponseBuilder.send(request.response).error(
@@ -61,31 +66,24 @@ class UploadController {
       if (user == null) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.notFound,
-          body: 'User Not Found',
+          body: 'user not found',
         );
       }
-      final uri = request.uri;
-      if (!uri.hasQuery && uri.query != 'groupName') {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.badRequest,
-          body: "Query Key 'groupName' Was Not Found",
-        );
-      }
-      final parameter = uri.queryParameters['groupName'];
+      final parameter = request.uri.queryParameters['groupName'];
       if (parameter == null || parameter.isEmpty) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.badRequest,
-          body: "Query Parameter Cannot Be Empty",
+          body: "query key 'groupName' was not found",
         );
       }
       final group = await groupRepository.fetchByGroupNameAndCreator(
         parameter,
-        user.id,
+        user.id!,
       );
       if (group == null) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.notFound,
-          body: 'Group Not Found',
+          body: 'group not found',
         );
       }
       if (group.picture != null) {
@@ -98,14 +96,14 @@ class UploadController {
       if (path == null) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.internalServerError,
-          body: 'Unable To Upload Picture',
+          body: 'unable to upload picture',
         );
       }
-      return await uploadRepository.saveGroupPicture(group.id, user.id, path)
-          ? HttpResponseBuilder.send(request.response).ok(HttpStatus.ok)
+      return await uploadRepository.saveGroupPicture(group.id!, user.id!, path)
+          ? HttpResponseBuilder.send(request.response).created(path)
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.badRequest,
-              body: 'Unable To Upload Picture',
+              body: 'unable to upload picture',
             );
     } catch (e) {
       return HttpResponseBuilder.send(request.response).error(
@@ -119,31 +117,133 @@ class UploadController {
     HttpRequest request,
     Map<String, dynamic> claims,
   ) async {
-    await _upload(request);
-    return HttpResponseBuilder.send(request.response).ok(200);
+    try {
+      final sender = await userRepository.fetchByUsername(claims['username']!);
+      if (sender == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.notFound,
+          body: 'user not found',
+        );
+      }
+      final recipientParameter = request.uri.queryParameters['recipient'];
+      if (recipientParameter == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.badRequest,
+          body: "query key 'recipient' was not found",
+        );
+      }
+      final typeParameter = request.uri.queryParameters['type'];
+      if (typeParameter == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.badRequest,
+          body: "query key 'type' was not found",
+        );
+      }
+      final recipient = await userRepository.fetchByUsername(
+        recipientParameter,
+      );
+      if (recipient == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.notFound,
+          body: 'recipient not found',
+        );
+      }
+      final path = await _upload(request);
+      if (path == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.internalServerError,
+          body: 'unable to upload picture',
+        );
+      }
+      return await messageRepository.savePrivateMessage(
+        PrivateMessage.dto(
+          type: typeParameter,
+          content: path,
+          isPending: true,
+          sender: User.id(id: sender.id),
+          recipient: User.id(id: recipient.id),
+        ),
+      )
+          ? HttpResponseBuilder.send(request.response).created(path)
+          : HttpResponseBuilder.send(request.response).error(
+              HttpStatus.badRequest,
+              body: 'unable to upload picture',
+            );
+    } catch (e) {
+      return HttpResponseBuilder.send(request.response).error(
+        HttpStatus.badRequest,
+        body: e.toString(),
+      );
+    }
   }
 
   Future<HttpResponseBuilder> uploadGroupChatFile(
     HttpRequest request,
     Map<String, dynamic> claims,
   ) async {
-    await _upload(request);
-    return HttpResponseBuilder.send(request.response).ok(200);
+    try {
+      final sender = await userRepository.fetchByUsername(claims['username']!);
+      if (sender == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.notFound,
+          body: 'user not found',
+        );
+      }
+      final groupParameter = request.uri.queryParameters['group'];
+      if (groupParameter == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.badRequest,
+          body: "query key 'group' was not found",
+        );
+      }
+      final typeParameter = request.uri.queryParameters['type'];
+      if (typeParameter == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.badRequest,
+          body: "query key 'type' was not found",
+        );
+      }
+      final group = await groupRepository.fetchByGroupName(groupParameter);
+      if (group == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.notFound,
+          body: 'group not found',
+        );
+      }
+      final path = await _upload(request);
+      if (path == null) {
+        return HttpResponseBuilder.send(request.response).error(
+          HttpStatus.internalServerError,
+          body: 'unable to upload picture',
+        );
+      }
+      return await messageRepository.saveGroupMessage(
+        GroupMessage.dto(
+          type: typeParameter,
+          content: path,
+          sender: User.id(id: sender.id),
+          group: group,
+        ),
+      )
+          ? HttpResponseBuilder.send(request.response).created(path)
+          : HttpResponseBuilder.send(request.response).error(
+              HttpStatus.badRequest,
+              body: 'unable to upload picture',
+            );
+    } catch (e) {
+      return HttpResponseBuilder.send(request.response).error(
+        HttpStatus.badRequest,
+        body: e.toString(),
+      );
+    }
   }
 
   Future<HttpResponseBuilder> fetchFile(HttpRequest request) async {
-    final uri = request.uri;
-    if (!uri.hasQuery && uri.query != 'file') {
-      return HttpResponseBuilder.send(request.response).error(
-        HttpStatus.badRequest,
-        body: "Query Key 'file' Was Not Found",
-      );
-    }
-    final parameter = uri.queryParameters['file'];
+    final parameter = request.uri.queryParameters['file'];
     if (parameter == null || parameter.isEmpty) {
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
-        body: "Query Parameter Cannot Be Empty",
+        body: "query key 'file' was not found",
       );
     }
     final path = 'uploads/$parameter';
@@ -165,7 +265,7 @@ class UploadController {
       }
       final boundary = request.headers.contentType!.parameters['boundary'];
       if (boundary == null) {
-        throw ArgumentError('Boundary Not Found');
+        throw ArgumentError('boundary not found');
       }
       final transformer = MimeMultipartTransformer(boundary);
       final stream = request.cast<List<int>>().transform(transformer);
@@ -180,19 +280,18 @@ class UploadController {
         final filename = header.parameters['filename'];
 
         if (name != 'file' || filename == null) {
-          throw ArgumentError('Invalid Content');
+          throw ArgumentError('invalid content');
         }
 
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final extension = filename.split('.').last;
 
-        final filenamePath = '$timestamp${Random().nextInt(999999)}.$extension';
-        final file = File('uploads/$filenamePath');
+        final file = '$timestamp${Random().nextInt(999999)}.$extension';
         final host = Environment.getProperty('SERVER_HOST')!;
         final port = Environment.getProperty('SERVER_PORT')!;
-        await part.pipe(file.openWrite());
+        await part.pipe(File('uploads/$file').openWrite());
 
-        url = 'http://$host:$port/uploads?file=$filenamePath';
+        url = 'http://$host:$port/uploads?file=$file';
       }
       return url;
     } catch (e) {
@@ -202,8 +301,7 @@ class UploadController {
 
   Future<void> _delete(String path) async {
     try {
-      final file = File(path);
-      await file.delete();
+      await File(path).delete();
     } catch (e) {
       rethrow;
     }

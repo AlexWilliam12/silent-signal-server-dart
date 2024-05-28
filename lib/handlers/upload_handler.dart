@@ -20,22 +20,22 @@ class UploadHandler extends HttpHandler {
     if (claims != null) {
       final path = request.uri.path;
       switch (path) {
-        case '/upload/picture/user':
+        case '/upload/user/picture':
           await controller.uploadUserPicture(request, claims);
           break;
-        case '/upload/picture/group':
+        case '/upload/group/picture':
           await controller.uploadGroupPicture(request, claims);
           break;
-        case '/upload/chat/user':
+        case '/upload/private/chat':
           await controller.uploadPrivateChatFile(request, claims);
           break;
-        case '/upload/chat/group':
+        case '/upload/group/chat':
           await controller.uploadGroupChatFile(request, claims);
           break;
         default:
           request.response
             ..statusCode = HttpStatus.notFound
-            ..write('Route Not Found')
+            ..write('route not found')
             ..close();
       }
     }
@@ -47,22 +47,16 @@ class UploadHandler extends HttpHandler {
     if (claims != null) {
       final path = request.uri.path;
       switch (path) {
-        case '/upload/picture/user':
+        case '/upload/user/picture':
           await controller.uploadUserPicture(request, claims);
           break;
-        case '/upload/picture/group':
+        case '/upload/group/picture':
           await controller.uploadGroupPicture(request, claims);
-          break;
-        case '/upload/chat/user':
-          await controller.uploadPrivateChatFile(request, claims);
-          break;
-        case '/upload/chat/group':
-          await controller.uploadGroupChatFile(request, claims);
           break;
         default:
           request.response
             ..statusCode = HttpStatus.notFound
-            ..write('Route Not Found')
+            ..write('route not found')
             ..close();
       }
     }

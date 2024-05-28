@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:mime/mime.dart';
 import 'package:silent_signal/database/message_repository.dart';
 import 'package:silent_signal/database/user_repository.dart';
+import 'package:silent_signal/models/private_message.dart';
 import 'package:silent_signal/models/sensitive_user.dart';
+import 'package:silent_signal/models/user.dart';
 import 'package:silent_signal/server/http_response_builder.dart';
 
 class PrivateChatController {
@@ -20,38 +21,14 @@ class PrivateChatController {
     if (user == null) {
       HttpResponseBuilder.send(request.response).error(
         HttpStatus.notFound,
-        body: 'User Not Found',
-      );
-      return;
-    }
-    final uri = request.uri;
-    if (!uri.hasQuery && uri.query != 'contact') {
-      HttpResponseBuilder.send(request.response).error(
-        HttpStatus.badRequest,
-        body: "Query Key 'contact' Was Not Found",
-      );
-      return;
-    }
-    final parameter = uri.queryParameters['contact'];
-    if (parameter == null || parameter.isEmpty) {
-      HttpResponseBuilder.send(request.response).error(
-        HttpStatus.badRequest,
-        body: "Query Parameter Cannot Be Empty",
-      );
-      return;
-    }
-    final contact = await userRepository.fetchByUsername(parameter);
-    if (contact == null) {
-      HttpResponseBuilder.send(request.response).error(
-        HttpStatus.notFound,
-        body: 'Contact Not Found',
+        body: 'user not found',
       );
       return;
     }
     if (!WebSocketTransformer.isUpgradeRequest(request)) {
       HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
-        body: 'Invalid Websocket Request',
+        body: 'invalid websocket request',
       );
       return;
     }
@@ -63,17 +40,21 @@ class PrivateChatController {
         user.name,
       );
       socket.add(jsonEncode(messages));
+      _updatePendingMessageSituation(messages);
 
       socket.listen(
         (message) async {
-          if (message is String) {
-            final response = await _handleMessage(user, contact, message);
-            socket.add(response);
-          } else if (message is List<int>) {
-            final response = await _handleFile(user, contact, message);
-            socket.add(response);
-          } else {
-            throw ArgumentError('Invalid Input Type');
+          try {
+            if (message is String) {
+              await _handleMessage(user, jsonDecode(message));
+              socket.add(message);
+            } else {
+              socket.add('invalid input type');
+              await socket.close();
+            }
+          } catch (e) {
+            socket.add(e.toString());
+            await socket.close();
           }
         },
         onDone: () {
@@ -91,31 +72,50 @@ class PrivateChatController {
       await socket.close();
       return;
     }
-    socket.close(HttpStatus.ok);
   }
 
-  Future<String> _handleMessage(
-    SensitiveUser user,
-    SensitiveUser contact,
-    String message,
+  Future<void> _handleMessage(
+    SensitiveUser sender,
+    Map<String, dynamic> message,
   ) async {
     try {
-      return '';
+      final recipient = await userRepository.fetchByUsername(
+        message['recipient']!,
+      );
+      if (recipient == null) {
+        throw ArgumentError('recipient not found');
+      }
+      final socket = broadcast[recipient.name];
+      bool isPending = true;
+      if (socket != null) {
+        socket.add(
+          jsonEncode({
+            'sender': sender.name,
+            'recipient': recipient.name,
+            'type': message['type'],
+            'content': message['content'],
+          }),
+        );
+        isPending = false;
+      }
+      messageRepository.savePrivateMessage(
+        PrivateMessage.dto(
+          type: message['type'],
+          content: message['content'],
+          isPending: isPending,
+          sender: User.id(id: sender.id),
+          recipient: User.id(id: recipient.id),
+        ),
+      );
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<String> _handleFile(
-    SensitiveUser user,
-    SensitiveUser contact,
-    List<int> message,
-  ) async {
-    try {
-      final type = lookupMimeType('', headerBytes: message);
-      return '';
-    } catch (e) {
-      rethrow;
+  void _updatePendingMessageSituation(List<PrivateMessage> messages) async {
+    if (messages.isNotEmpty) {
+      final ids = messages.map((message) => message.id!).toList();
+      await messageRepository.updatePrivateMessagePendingSituation(ids);
     }
   }
 }
