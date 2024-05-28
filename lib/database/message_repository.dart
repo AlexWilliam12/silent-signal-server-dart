@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:postgres/postgres.dart';
 import 'package:silent_signal/consts/message_consts.dart';
 import 'package:silent_signal/database/manager.dart';
@@ -18,15 +16,15 @@ class MessageRepository {
       );
       final list = <PrivateMessage>[];
       for (final row in result) {
-        final sender = jsonDecode(row[6] as String);
-        final recipient = jsonDecode(row[7] as String);
+        final sender = row[4] as Map<String, dynamic>;
+        final recipient = row[5] as Map<String, dynamic>;
         list.add(
           PrivateMessage.model(
             id: row[0] as int,
             type: row[1] as String,
             content: row[2] as String,
             isPending: row[3] as bool,
-            createdAt: row[4] as DateTime,
+            createdAt: row[6] as DateTime,
             sender: User.dto(
               name: sender['name'],
               picture: sender['picture'],

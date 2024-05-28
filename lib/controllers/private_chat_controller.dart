@@ -11,7 +11,7 @@ import 'package:silent_signal/server/http_response_builder.dart';
 class PrivateChatController {
   final userRepository = SensitiveUserRepository();
   final messageRepository = MessageRepository();
-  final broadcast = <String, WebSocket>{};
+  static final broadcast = <String, WebSocket>{};
 
   Future<void> handleConnection(
     HttpRequest request,
@@ -43,11 +43,19 @@ class PrivateChatController {
       _updatePendingMessageSituation(messages);
 
       socket.listen(
-        (message) async {
+        (content) async {
           try {
-            if (message is String) {
-              await _handleMessage(user, jsonDecode(message));
-              socket.add(message);
+            if (content is String) {
+              final message = jsonDecode(content);
+              await _handleMessage(user, message);
+              socket.add(
+                jsonEncode({
+                  'sender': user.name,
+                  'recipient': message['recipient'],
+                  'type': message['type'],
+                  'content': message['content'],
+                }),
+              );
             } else {
               socket.add('invalid input type');
               await socket.close();
@@ -74,10 +82,7 @@ class PrivateChatController {
     }
   }
 
-  Future<void> _handleMessage(
-    SensitiveUser sender,
-    Map<String, dynamic> message,
-  ) async {
+  Future<void> _handleMessage(SensitiveUser sender, message) async {
     try {
       final recipient = await userRepository.fetchByUsername(
         message['recipient']!,
