@@ -72,14 +72,16 @@ const FETCH_GROUP_BY_NAME = r'''
     g.description,
     g.picture,
     (
-      SELECT JSON_AGG(
-        JSON_BUILD_OBJECT(
-          'name',
+      SELECT JSON_BUILD_OBJECT(
+          'name', c.username,
+          'picture', c.picture
+      ) FROM (
+        SELECT
           c.username,
-          'picture',
-          c.picture,
-        )
-      ) FROM users c WHERE c.id = g.creator_id
+          c.picture
+        FROM users c
+        WHERE c.id = g.creator_id
+      ) AS c
     ) AS creator,
     (
       SELECT JSON_AGG(
@@ -114,18 +116,13 @@ const FETCH_GROUP_BY_NAME = r'''
             SELECT JSON_BUILD_OBJECT(
             'name', s.username,
             'picture', s.picture
-            ) FROM (
-              SELECT
-                s.username,
-                s.picture
-              FROM users s
-              WHERE s.id = gm.sender_id
-            ) AS s
-          ) AS sender
+            ) FROM users s
+            WHERE s.id = gm.sender_id
+          ) AS sender,
           gm.created_at
         FROM group_messages gm
       ) AS m
-    ) AS messages
+    ) AS messages,
     g.created_at
   FROM groups g
   WHERE g.group_name = $1

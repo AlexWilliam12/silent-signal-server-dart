@@ -72,7 +72,7 @@ class GroupRepository {
       if (row == null) {
         return null;
       }
-      final creator = jsonDecode(row[4].toString());
+      final creator = row[4] as Map<String, dynamic>;
       final group = Group.model(
         id: row[0] as int,
         name: row[1] as String,

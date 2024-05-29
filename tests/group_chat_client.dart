@@ -23,7 +23,7 @@ void main() async {
 
     socket.listen(
       (message) {
-        print(jsonDecode(message));
+        print(message);
       },
       onDone: () {
         print('Connection closed by the server');

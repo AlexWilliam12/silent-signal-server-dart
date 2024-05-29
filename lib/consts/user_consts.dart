@@ -31,9 +31,7 @@ const FETCH_USER_DATA_QUERY = r'''
           'group_name', cg.group_name,
           'description', cg.description,
           'group_picture', cg.group_picture,
-          'created_at', cg.created_at,
-          'creator_name', u.username,
-          'creator_picture', u.picture
+          'created_at', cg.created_at
         )
       )
       FROM (

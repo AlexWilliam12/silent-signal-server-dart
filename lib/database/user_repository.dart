@@ -66,10 +66,7 @@ class SensitiveUserRepository {
               name: element['group_name'] as String,
               description: element['description'] as String?,
               picture: element['group_picture'] as String?,
-              creator: User.dto(
-                name: element['creator_name'],
-                picture: element['creator_picture'],
-              ),
+              creator: User.id(id: null),
               createdAt: DateTime.parse(element['created_at']),
             ),
           );

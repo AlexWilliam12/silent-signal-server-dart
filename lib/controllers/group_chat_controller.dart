@@ -19,7 +19,7 @@ class GroupChatController {
     HttpRequest request,
     Map<String, dynamic> claims,
   ) async {
-    final user = await userRepository.fetchByUsername(claims['username']);
+    final user = await userRepository.fetchData(claims['username']);
     if (!WebSocketTransformer.isUpgradeRequest(request)) {
       HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
@@ -40,7 +40,22 @@ class GroupChatController {
             {user.name: socket}
           ];
         }
-        socket.add(jsonEncode(group.messages));
+        final messages = await messageRepository.fetchAllGroupMessages(
+          group.name,
+        );
+        socket.add(jsonEncode(
+          messages
+              .map(
+                (message) => {
+                  'sender': message.sender.name,
+                  'group': message.group.name,
+                  'type': message.type,
+                  'content': message.content,
+                  'created_at': message.createdAt!.toIso8601String(),
+                },
+              )
+              .toList(),
+        ));
         _updatePendingSituation(group.messages, user.id!, group.id!);
       }
 
@@ -105,20 +120,23 @@ class GroupChatController {
     if (groupBroadcast != null) {
       for (final members in groupBroadcast) {
         for (final entry in members.entries) {
-          entry.value.add(
-            jsonEncode({
-              'sender': user.name,
-              'group': message['group'],
-              'type': message['type'],
-              'content': message['content'],
-            }),
-          );
-          seenBy.add(
-            User.dto(
-              name: entry.key,
-              picture: null,
-            ),
-          );
+          if (entry.key != user.name) {
+            entry.value.add(
+              jsonEncode({
+                'sender': user.name,
+                'group': message['group'],
+                'type': message['type'],
+                'content': message['content'],
+                'created_at': DateTime.now().toIso8601String(),
+              }),
+            );
+            seenBy.add(
+              User.dto(
+                name: entry.key,
+                picture: null,
+              ),
+            );
+          }
         }
       }
     }

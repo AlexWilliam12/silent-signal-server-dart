@@ -16,7 +16,7 @@ const FETCH_ALL_PRIVATE_MESSAGES = r'''
           s.picture
         FROM users s
         WHERE s.id = pv.sender_id
-      ) as s
+      ) AS s
     ) AS sender,
     (
       SELECT JSON_BUILD_OBJECT(
@@ -28,7 +28,7 @@ const FETCH_ALL_PRIVATE_MESSAGES = r'''
           r.picture
         FROM users r
         WHERE r.id = pv.recipient_id
-      ) as r
+      ) AS r
     ) AS recipient,
     pv.created_at,
     pv.is_temporary_message
@@ -61,17 +61,17 @@ const FETCH_ALL_GROUP_MESSAGES = r'''
       'description', g.description,
       'picture', g.picture,
       'creator', (
-        SELECT JSON_BUILD_OBJECT(
-          'name', c.username,
-          'picture', c.picture
-        ) FROM (
-          SELECT
-            c.username,
-            c.picture
-          FROM users c
-          WHERE c.id = gm.sender_id
-        ) AS c
-      ) AS creator,
+      	select json_build_object(
+      		'name', creator.username,
+      		'picture', creator.picture
+      	) from (
+      		select
+      			c.username,
+      			c.picture
+      		from users c
+      		where c.id = g.creator_id
+      	) as creator
+      ),
       'created_at', g.created_at
     ) AS group,
     gm.created_at
@@ -114,10 +114,18 @@ const DELETE_GROUP_MESSAGE = r'''
 ''';
 
 const INSERT_MESSAGE_SEEN_BY = r'''
-  INSERT INTO group_message_seen_by(
+  INSERT INTO group_message_seen_by (
     group_message_id,
     user_id,
     group_id
-  ) VALUES ($1, $2, $3)
-  ON CONFLICT (group_message_id, user_id, group_id) DO NOTHING
+  )
+  SELECT $1, $2, $3
+  WHERE NOT EXISTS (
+      SELECT 1 
+      FROM group_message_seen_by 
+      WHERE 
+        group_message_id = $1 
+        AND user_id = $2 
+        AND group_id = $3
+  )
 ''';

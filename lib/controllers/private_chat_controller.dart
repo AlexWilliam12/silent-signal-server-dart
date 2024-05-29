@@ -32,7 +32,19 @@ class PrivateChatController {
       final messages = await messageRepository.fetchAllPrivateMessages(
         user.name,
       );
-      socket.add(jsonEncode(messages));
+      socket.add(jsonEncode(
+        messages
+            .map(
+              (message) => {
+                'sender': message.sender.name,
+                'recipient': message.recipient.name,
+                'type': message.type,
+                'content': message.content,
+                'created_at': message.createdAt!.toIso8601String(),
+              },
+            )
+            .toList(),
+      ));
       _updatePendingSituation(messages);
 
       socket.listen(
@@ -91,6 +103,7 @@ class PrivateChatController {
             'recipient': recipient.name,
             'type': message['type'],
             'content': message['content'],
+            'created_at': DateTime.now().toIso8601String(),
           }),
         );
         isPending = false;

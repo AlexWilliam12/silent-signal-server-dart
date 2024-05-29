@@ -193,7 +193,7 @@ class GroupController {
         );
       }
       final isSaved =
-          await groupRepository.saveGroupMember(user!.id!, group.id!);
+          await groupRepository.saveGroupMember(group.id!, user!.id!);
       return isSaved
           ? HttpResponseBuilder.send(request.response).ok(HttpStatus.ok)
           : HttpResponseBuilder.send(request.response).error(
