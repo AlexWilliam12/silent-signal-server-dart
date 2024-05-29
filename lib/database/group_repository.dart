@@ -4,10 +4,11 @@ import 'package:postgres/postgres.dart';
 import 'package:silent_signal/consts/group_consts.dart';
 import 'package:silent_signal/database/manager.dart';
 import 'package:silent_signal/models/group.dart';
+import 'package:silent_signal/models/group_message.dart';
 import 'package:silent_signal/models/user.dart';
 
 class GroupRepository {
-  Future<bool> create(Group group) async {
+  Future<int> create(Group group) async {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
@@ -16,7 +17,7 @@ class GroupRepository {
           CREATE_GROUP,
           parameters: [group.name, group.description, group.creator.id!],
         );
-        return result.affectedRows > 0;
+        return result.first[0] as int;
       });
     } catch (e) {
       rethrow;
@@ -27,7 +28,7 @@ class GroupRepository {
     }
   }
 
-  Future<List<Group>> fetchGroups() async {
+  Future<List<Group>> fetchAll() async {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
@@ -72,7 +73,7 @@ class GroupRepository {
         return null;
       }
       final creator = jsonDecode(row[4].toString());
-      return Group.model(
+      final group = Group.model(
         id: row[0] as int,
         name: row[1] as String,
         description: row[2] as String?,
@@ -81,8 +82,36 @@ class GroupRepository {
           name: creator['name'],
           picture: creator['picture'],
         ),
-        createdAt: row[5] as DateTime,
+        createdAt: row[7] as DateTime,
       );
+      if (row[5] != null) {
+        final list = row[5] as List<dynamic>;
+        for (var element in list) {
+          group.members.add(
+            User.dto(
+              name: element['name'],
+              picture: element['picture'],
+            ),
+          );
+        }
+      }
+      if (row[6] != null) {
+        final list = row[6] as List<dynamic>;
+        for (var element in list) {
+          group.messages.add(
+            GroupMessage.dto(
+              type: element['type'],
+              content: element['content'],
+              sender: User.dto(
+                name: element['sender']['name'],
+                picture: element['sender']['picture'],
+              ),
+              group: group,
+            ),
+          );
+        }
+      }
+      return group;
     } catch (e) {
       rethrow;
     } finally {
@@ -139,7 +168,6 @@ class GroupRepository {
             'id': group.id,
             'group_name': group.name,
             'description': group.description,
-            'picture': group.picture,
             'creator_id': group.creator.id!,
           },
         );
@@ -162,6 +190,26 @@ class GroupRepository {
         final result = await session.execute(
           DELETE_GROUP,
           parameters: [groupId],
+        );
+        return result.affectedRows > 0;
+      });
+    } catch (e) {
+      rethrow;
+    } finally {
+      if (conn != null) {
+        await conn.close();
+      }
+    }
+  }
+
+  Future<bool> saveGroupMember(int groupId, int userId) async {
+    Connection? conn;
+    try {
+      conn = await ConnectionManager.getConnection();
+      return await conn.runTx((session) async {
+        final result = await session.execute(
+          SAVE_GROUP_MEMBER,
+          parameters: [groupId, userId],
         );
         return result.affectedRows > 0;
       });

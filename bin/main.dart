@@ -3,8 +3,8 @@ import 'package:silent_signal/server/server.dart';
 
 void main() async {
   await Initializer.initEnv();
-  await Initializer.initMigration();
+  await Initializer.initPreloaders();
 
   final server = Server();
-  server.start();
+  await server.start();
 }

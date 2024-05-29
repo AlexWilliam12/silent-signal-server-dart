@@ -18,7 +18,18 @@ class UserHandler extends HttpHandler {
   Future<void> handlePost(HttpRequest request) async {
     final claims = await doFilter(request);
     if (claims != null) {
-      await controller.saveContact(request, claims);
+      final path = request.uri.path;
+      if (path == '/user/contact') {
+        await controller.saveContact(request, claims);
+      } else if (path == '/user/temporary/messages') {
+        await controller.enableTemporaryMessages(request, claims);
+      } else {
+        request.response
+          ..statusCode = HttpStatus.notFound
+          ..headers.add('Content-Type', 'text/plain')
+          ..write('route not found')
+          ..close();
+      }
     }
   }
 

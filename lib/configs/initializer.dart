@@ -6,7 +6,7 @@ class Initializer {
     await Environment.loadProperties();
   }
 
-  static Future<void> initMigration() async {
-    await ConnectionManager.executeMigration();
+  static Future<void> initPreloaders() async {
+    await ConnectionManager.executePreloaders();
   }
 }

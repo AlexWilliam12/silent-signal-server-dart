@@ -117,7 +117,8 @@ const FETCH_USER_BY_USERNAME = r'''
     password,
     credentials_hash,
     picture,
-    created_at
+    created_at,
+    temporary_message_interval
   FROM users 
   WHERE username = $1
 ''';
@@ -127,7 +128,6 @@ const UPDATE_USER = '''
     username = @username,
     password = @password,
     credentials_hash = @credentials_hash,
-    picture = @picture
   WHERE id = @id
 ''';
 
@@ -142,4 +142,10 @@ const SAVE_USE_CONTACT = r'''
     user_id,
     contact_id
   ) VALUES ($1, $2)
+''';
+
+const ENABLE_TEMPORARY_MESSAGES = '''
+  UPDATE users SET
+    temporary_message_interval = INTERVAL @interval
+  WHERE username = @username
 ''';

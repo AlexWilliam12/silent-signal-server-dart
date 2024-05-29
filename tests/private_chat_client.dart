@@ -37,7 +37,7 @@ void main() async {
 
     await _sendMessage(socket, recipient);
   } catch (e) {
-    print(e.toString());
+    print(e);
   }
 }
 

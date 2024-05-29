@@ -17,6 +17,7 @@ class WebsocketHandler extends HttpHandler {
       } else {
         request.response
           ..statusCode = HttpStatus.notFound
+          ..headers.add('Content-Type', 'text/plain')
           ..write('route not found')
           ..close();
       }

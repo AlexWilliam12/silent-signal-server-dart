@@ -24,13 +24,7 @@ class UploadController {
   ) async {
     try {
       final user = await userRepository.fetchByUsername(claims['username']!);
-      if (user == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.notFound,
-          body: 'user not found',
-        );
-      }
-      if (user.picture != null) {
+      if (user!.picture != null) {
         final path = 'uploads/${user.picture!.substring(
           user.picture!.lastIndexOf('=') + 1,
         )}';
@@ -43,7 +37,8 @@ class UploadController {
           body: 'unable to upload picture',
         );
       }
-      return await uploadRepository.saveUserPicture(user.id!, path)
+      final isSaved = await uploadRepository.saveUserPicture(user.id!, path);
+      return isSaved
           ? HttpResponseBuilder.send(request.response).created(path)
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.badRequest,
@@ -63,12 +58,6 @@ class UploadController {
   ) async {
     try {
       final user = await userRepository.fetchByUsername(claims['username']!);
-      if (user == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.notFound,
-          body: 'user not found',
-        );
-      }
       final parameter = request.uri.queryParameters['groupName'];
       if (parameter == null || parameter.isEmpty) {
         return HttpResponseBuilder.send(request.response).error(
@@ -78,7 +67,7 @@ class UploadController {
       }
       final group = await groupRepository.fetchByGroupNameAndCreator(
         parameter,
-        user.id!,
+        user!.id!,
       );
       if (group == null) {
         return HttpResponseBuilder.send(request.response).error(
@@ -99,7 +88,12 @@ class UploadController {
           body: 'unable to upload picture',
         );
       }
-      return await uploadRepository.saveGroupPicture(group.id!, user.id!, path)
+      final isSaved = await uploadRepository.saveGroupPicture(
+        group.id!,
+        user.id!,
+        path,
+      );
+      return isSaved
           ? HttpResponseBuilder.send(request.response).created(path)
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.badRequest,
@@ -119,12 +113,6 @@ class UploadController {
   ) async {
     try {
       final sender = await userRepository.fetchByUsername(claims['username']!);
-      if (sender == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.notFound,
-          body: 'user not found',
-        );
-      }
       final recipientParameter = request.uri.queryParameters['recipient'];
       if (recipientParameter == null) {
         return HttpResponseBuilder.send(request.response).error(
@@ -155,15 +143,17 @@ class UploadController {
           body: 'unable to upload picture',
         );
       }
-      return await messageRepository.savePrivateMessage(
+      final isSaved = await messageRepository.savePrivateMessage(
         PrivateMessage.dto(
           type: typeParameter,
           content: path,
           isPending: true,
-          sender: User.id(id: sender.id),
+          sender: User.id(id: sender!.id),
           recipient: User.id(id: recipient.id),
+          isTemporaryMessage: sender.temporaryMessageInterval != null,
         ),
-      )
+      );
+      return isSaved
           ? HttpResponseBuilder.send(request.response).created(path)
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.badRequest,
@@ -183,12 +173,6 @@ class UploadController {
   ) async {
     try {
       final sender = await userRepository.fetchByUsername(claims['username']!);
-      if (sender == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.notFound,
-          body: 'user not found',
-        );
-      }
       final groupParameter = request.uri.queryParameters['group'];
       if (groupParameter == null) {
         return HttpResponseBuilder.send(request.response).error(
@@ -217,14 +201,15 @@ class UploadController {
           body: 'unable to upload picture',
         );
       }
-      return await messageRepository.saveGroupMessage(
+      final isSaved = await messageRepository.saveGroupMessage(
         GroupMessage.dto(
           type: typeParameter,
           content: path,
-          sender: User.id(id: sender.id),
+          sender: User.id(id: sender!.id),
           group: group,
         ),
-      )
+      );
+      return isSaved != 0
           ? HttpResponseBuilder.send(request.response).created(path)
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.badRequest,

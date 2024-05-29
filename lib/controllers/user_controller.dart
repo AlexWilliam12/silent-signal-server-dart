@@ -13,17 +13,10 @@ class UserController {
   ) async {
     try {
       final user = await repository.fetchData(claims['username']);
-      if (user != null) {
-        return HttpResponseBuilder.send(request.response).ok(
-          HttpStatus.ok,
-          body: jsonEncode(user.toJson()),
-        );
-      } else {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.badRequest,
-          body: 'User Not Found',
-        );
-      }
+      return HttpResponseBuilder.send(request.response).ok(
+        HttpStatus.ok,
+        body: jsonEncode(user),
+      );
     } catch (e) {
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
@@ -38,24 +31,21 @@ class UserController {
   ) async {
     try {
       final user = await repository.fetchByUsername(claims['username']);
-      if (user == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.notFound,
-          body: 'User Not Found',
-        );
-      }
+
       final body = await utf8.decoder.bind(request).join();
       final json = jsonDecode(body);
-      user.name = json['username'] ?? user.name;
+
+      user!.name = json['username'] ?? user.name;
       user.password = json['password'] ?? user.password;
-      user.picture = json['picture'] ?? user.picture;
-      return await repository.update(user)
+
+      final isUpdated = await repository.update(user);
+      return isUpdated
           ? HttpResponseBuilder.send(request.response).ok(
               HttpStatus.ok,
             )
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.internalServerError,
-              body: 'User Not Updated',
+              body: 'unable to update user',
             );
     } catch (e) {
       return HttpResponseBuilder.send(request.response).error(
@@ -70,13 +60,14 @@ class UserController {
     Map<String, dynamic> claims,
   ) async {
     try {
-      return await repository.delete(claims['username'])
+      final isDeleted = await repository.delete(claims['username']);
+      return isDeleted
           ? HttpResponseBuilder.send(request.response).ok(
               HttpStatus.ok,
             )
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.internalServerError,
-              body: 'User Not Deleted',
+              body: 'unable to delete user',
             );
     } catch (e) {
       return HttpResponseBuilder.send(request.response).error(
@@ -91,18 +82,11 @@ class UserController {
     Map<String, dynamic> claims,
   ) async {
     try {
-      final uri = request.uri;
-      if (!uri.hasQuery && uri.query != 'contact') {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.badRequest,
-          body: "Query Key 'contact' Was Not Found",
-        );
-      }
-      final parameter = uri.queryParameters['contact'];
+      final parameter = request.uri.queryParameters['contact'];
       if (parameter == null || parameter.isEmpty) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.badRequest,
-          body: "Query Parameter Cannot Be Empty",
+          body: "query parameter cannot be empty",
         );
       }
       final user = await repository.fetchByUsername(claims['username']);
@@ -116,7 +100,7 @@ class UserController {
       if (contact == null) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.notFound,
-          body: "User '$parameter' Not Found",
+          body: "user '$parameter' not found",
         );
       }
       return await repository.saveContact(user.id!, contact.id!)
@@ -125,11 +109,40 @@ class UserController {
             )
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.internalServerError,
-              body: 'Contact Not Saved',
+              body: 'unable to save contact',
             );
     } catch (e) {
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
+        body: e.toString(),
+      );
+    }
+  }
+
+  Future<HttpResponseBuilder> enableTemporaryMessages(
+    HttpRequest request,
+    Map<String, dynamic> claims,
+  ) async {
+    try {
+      final user = await repository.fetchByUsername(claims['username']);
+
+      final body = await utf8.decoder.bind(request).join();
+      final json = jsonDecode(body);
+
+      user!.temporaryMessageInterval = json['time'];
+      final isUpdated = await repository.updateTemporaryMessages(
+        user.name,
+        user.temporaryMessageInterval,
+      );
+      return isUpdated
+          ? HttpResponseBuilder.send(request.response).ok(HttpStatus.ok)
+          : HttpResponseBuilder.send(request.response).error(
+              HttpStatus.internalServerError,
+              body: 'unable to update temporary messages',
+            );
+    } catch (e) {
+      return HttpResponseBuilder.send(request.response).error(
+        HttpStatus.internalServerError,
         body: e.toString(),
       );
     }

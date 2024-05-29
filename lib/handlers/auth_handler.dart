@@ -24,6 +24,7 @@ class AuthHandler extends HttpHandler {
       default:
         request.response
           ..statusCode = HttpStatus.notFound
+          ..headers.add('Content-Type', 'text/plain')
           ..write('route not found')
           ..close();
     }

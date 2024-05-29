@@ -18,13 +18,6 @@ class PrivateChatController {
     Map<String, dynamic> claims,
   ) async {
     final user = await userRepository.fetchByUsername(claims['username']);
-    if (user == null) {
-      HttpResponseBuilder.send(request.response).error(
-        HttpStatus.notFound,
-        body: 'user not found',
-      );
-      return;
-    }
     if (!WebSocketTransformer.isUpgradeRequest(request)) {
       HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
@@ -33,14 +26,14 @@ class PrivateChatController {
       return;
     }
     final socket = await WebSocketTransformer.upgrade(request);
-    broadcast[user.name] = socket;
+    broadcast[user!.name] = socket;
 
     try {
       final messages = await messageRepository.fetchAllPrivateMessages(
         user.name,
       );
       socket.add(jsonEncode(messages));
-      _updatePendingMessageSituation(messages);
+      _updatePendingSituation(messages);
 
       socket.listen(
         (content) async {
@@ -78,7 +71,6 @@ class PrivateChatController {
       print(e);
       broadcast.remove(user.name);
       await socket.close();
-      return;
     }
   }
 
@@ -110,6 +102,7 @@ class PrivateChatController {
           isPending: isPending,
           sender: User.id(id: sender.id),
           recipient: User.id(id: recipient.id),
+          isTemporaryMessage: sender.temporaryMessageInterval != null,
         ),
       );
     } catch (e) {
@@ -117,10 +110,10 @@ class PrivateChatController {
     }
   }
 
-  void _updatePendingMessageSituation(List<PrivateMessage> messages) async {
+  Future<void> _updatePendingSituation(List<PrivateMessage> messages) async {
     if (messages.isNotEmpty) {
       final ids = messages.map((message) => message.id!).toList();
-      await messageRepository.updatePrivateMessagePendingSituation(ids);
+      await messageRepository.updatePrivateMessagesPendingSituation(ids);
     }
   }
 }

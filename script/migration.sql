@@ -4,8 +4,9 @@ CREATE TABLE IF NOT EXISTS users(
     password VARCHAR(255) NOT NULL,
     credentials_hash VARCHAR(255) UNIQUE NOT NULL,
     picture TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    temporary_message_interval INTERVAL DEFAULT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS contacts(
@@ -14,8 +15,8 @@ CREATE TABLE IF NOT EXISTS contacts(
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(contact_id) REFERENCES users(id),
     PRIMARY KEY(user_id, contact_id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS private_messages(
@@ -25,10 +26,11 @@ CREATE TABLE IF NOT EXISTS private_messages(
     sender_id INTEGER NOT NULL,
     recipient_id INTEGER NOT NULL,
     is_pending BOOLEAN NOT NULL,
+    is_temporary_message BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY(sender_id) REFERENCES users(id),
     FOREIGN KEY(recipient_id) REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS groups(
@@ -38,8 +40,8 @@ CREATE TABLE IF NOT EXISTS groups(
     picture TEXT,
     creator_id INTEGER NOT NULL,
     FOREIGN KEY(creator_id) REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS group_members(
@@ -48,8 +50,8 @@ CREATE TABLE IF NOT EXISTS group_members(
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(group_id) REFERENCES groups(id),
     PRIMARY KEY(user_id, group_id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS group_messages(
@@ -60,8 +62,8 @@ CREATE TABLE IF NOT EXISTS group_messages(
     group_id INTEGER NOT NULL,
     FOREIGN KEY(sender_id) REFERENCES users(id),
     FOREIGN KEY(group_id) REFERENCES groups(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS group_message_seen_by(
@@ -72,8 +74,8 @@ CREATE TABLE IF NOT EXISTS group_message_seen_by(
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(group_id) REFERENCES groups(id),
     PRIMARY KEY(group_message_id, user_id, group_id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE INDEX IF NOT EXISTS user_index ON users(username);

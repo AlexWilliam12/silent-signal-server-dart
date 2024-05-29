@@ -5,6 +5,7 @@ class PrivateMessage {
   String type;
   String content;
   bool isPending;
+  bool isTemporaryMessage;
   DateTime? createdAt;
   User sender;
   User recipient;
@@ -13,6 +14,7 @@ class PrivateMessage {
     required this.type,
     required this.content,
     required this.isPending,
+    required this.isTemporaryMessage,
     required this.sender,
     required this.recipient,
   });
@@ -22,6 +24,7 @@ class PrivateMessage {
     required this.type,
     required this.content,
     required this.isPending,
+    required this.isTemporaryMessage,
     required this.createdAt,
     required this.sender,
     required this.recipient,

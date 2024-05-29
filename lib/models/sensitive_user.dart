@@ -8,6 +8,7 @@ class SensitiveUser {
   String credentialsHash;
   String? picture;
   DateTime? createdAt;
+  String? temporaryMessageInterval;
   final List<Group> createdGroups = [];
   final List<Group> parcipateGroups = [];
   final List<User> contacts = [];
@@ -31,7 +32,6 @@ class SensitiveUser {
     return {
       'id': id,
       'name': name,
-      'password': password,
       'credentials_hash': credentialsHash,
       'picture': picture,
       'created_at': createdAt!.toIso8601String(),
