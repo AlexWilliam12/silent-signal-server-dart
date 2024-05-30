@@ -9,17 +9,14 @@ class ConnectionManager {
     Connection? conn;
     try {
       conn = await ConnectionManager.getConnection();
-      Future.wait([
+      await Future.wait([
         ConnectionManager._loadMigrations(conn),
         ConnectionManager._loadFunctions(conn),
       ])
           .then((value) async => await conn!.close())
-          .catchError((error) => print(error));
+          .catchError((error) => throw Exception(error));
     } catch (e) {
-      print(e);
-      if (conn != null) {
-        await conn.close();
-      }
+      throw Exception(e);
     }
   }
 

@@ -27,39 +27,50 @@ class Server {
   }
 
   Future<void> _handleRequest(HttpRequest request) async {
-    final path = '${request.uri.path} ${request.method}'.trim();
-    final handler = _router[path];
-    if (handler != null) {
-      HttpMethod? method = HttpMethod.values.firstWhere(
-        (e) => e.name == request.method,
-      );
-      switch (method) {
-        case HttpMethod.GET:
-          if (request.headers.value('upgrade') == 'websocket') {
-            await handler.handleRequest(request);
-          } else {
-            await handler.handleGet(request);
-          }
-          break;
-        case HttpMethod.POST:
-          await handler.handlePost(request);
-          break;
-        case HttpMethod.PUT:
-          await handler.handlePut(request);
-          break;
-        case HttpMethod.DELETE:
-          await handler.handleDelete(request);
-          break;
-        default:
-          request.response
-            ..statusCode = HttpStatus.methodNotAllowed
-            ..write('Not Implemented')
-            ..close();
+    try {
+      final path = '${request.uri.path} ${request.method}'.trim();
+      final handler = _router[path];
+      if (handler != null) {
+        HttpMethod? method = HttpMethod.values.firstWhere(
+          (e) => e.name == request.method,
+        );
+        switch (method) {
+          case HttpMethod.GET:
+            if (request.headers.value('upgrade') == 'websocket') {
+              await handler.handleRequest(request);
+            } else {
+              await handler.handleGet(request);
+            }
+            break;
+          case HttpMethod.POST:
+            await handler.handlePost(request);
+            break;
+          case HttpMethod.PUT:
+            await handler.handlePut(request);
+            break;
+          case HttpMethod.DELETE:
+            await handler.handleDelete(request);
+            break;
+          default:
+            request.response
+              ..statusCode = HttpStatus.methodNotAllowed
+              ..headers.add('Content-Type', 'texte/plain')
+              ..write('method not implemented')
+              ..close();
+        }
+      } else {
+        request.response
+          ..statusCode = HttpStatus.notFound
+          ..headers.add('Content-Type', 'texte/plain')
+          ..write('route not found')
+          ..close();
       }
-    } else {
+    } catch (e) {
+      print(e);
       request.response
-        ..statusCode = HttpStatus.notFound
-        ..write('Route Not Found')
+        ..statusCode = HttpStatus.internalServerError
+        ..headers.add('Content-Type', 'texte/plain')
+        ..write(e.toString())
         ..close();
     }
   }

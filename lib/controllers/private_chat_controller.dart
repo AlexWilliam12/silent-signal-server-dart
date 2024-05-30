@@ -66,11 +66,13 @@ class PrivateChatController {
               await socket.close();
             }
           } catch (e) {
+            print(e);
             socket.add(e.toString());
             await socket.close();
           }
         },
         onDone: () {
+          print('client close connection');
           broadcast.remove(user.name);
         },
         onError: (error) {

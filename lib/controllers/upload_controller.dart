@@ -45,6 +45,7 @@ class UploadController {
               body: 'unable to upload picture',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -100,6 +101,7 @@ class UploadController {
               body: 'unable to upload picture',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -160,6 +162,7 @@ class UploadController {
               body: 'unable to upload picture',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -216,6 +219,7 @@ class UploadController {
               body: 'unable to upload picture',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -280,6 +284,7 @@ class UploadController {
       }
       return url;
     } catch (e) {
+      print(e);
       rethrow;
     }
   }
@@ -288,6 +293,7 @@ class UploadController {
     try {
       await File(path).delete();
     } catch (e) {
+      print(e);
       rethrow;
     }
   }

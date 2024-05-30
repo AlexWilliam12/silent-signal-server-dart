@@ -28,6 +28,7 @@ class AuthController {
               body: 'user not found',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -56,6 +57,7 @@ class AuthController {
               body: 'unable to create user',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -81,6 +83,7 @@ class AuthController {
       }
       return HttpResponseBuilder.send(request.response).ok(HttpStatus.ok);
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -103,6 +106,7 @@ class AuthController {
               body: 'user not found',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),

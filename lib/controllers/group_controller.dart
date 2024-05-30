@@ -18,6 +18,7 @@ class GroupController {
         body: jsonEncode(await groupRepository.fetchAll()),
       );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -45,6 +46,7 @@ class GroupController {
               body: 'group not found',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -79,6 +81,7 @@ class GroupController {
       groupRepository.saveGroupMember(groupId, user.id!);
       return HttpResponseBuilder.send(request.response).ok(HttpStatus.ok);
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -125,6 +128,7 @@ class GroupController {
               body: 'unable to update group',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -164,6 +168,7 @@ class GroupController {
               body: 'unable to delete group',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -201,6 +206,7 @@ class GroupController {
               body: 'unable to save group member',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),

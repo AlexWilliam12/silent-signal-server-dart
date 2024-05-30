@@ -79,11 +79,13 @@ class GroupChatController {
               await socket.close();
             }
           } catch (e) {
+            print(e);
             socket.add(e.toString());
             await socket.close();
           }
         },
         onDone: () {
+          print('client close connection');
           final groupBroadcast = broadcast[selectedGroup];
           if (groupBroadcast != null) {
             groupBroadcast.removeWhere(

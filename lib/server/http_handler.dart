@@ -4,23 +4,32 @@ import 'package:silent_signal/utils/jwt.dart';
 
 abstract class HttpHandler {
   Future<Map<String, dynamic>?> doFilter(HttpRequest request) async {
-    final header = request.headers['Authorization'];
-    if (header != null) {
-      final token = header.first.substring(7).trim();
-      if (validateJWT(token)) {
-        return getClaims(token);
+    try {
+      final header = request.headers['Authorization'];
+      if (header != null) {
+        final token = header.first.substring(7).trim();
+        if (validateJWT(token)) {
+          return getClaims(token);
+        } else {
+          request.response
+            ..statusCode = HttpStatus.unauthorized
+            ..headers.add('Content-Type', 'text/plain')
+            ..write('unauthorized request')
+            ..close();
+        }
       } else {
         request.response
-          ..statusCode = HttpStatus.unauthorized
+          ..statusCode = HttpStatus.forbidden
           ..headers.add('Content-Type', 'text/plain')
-          ..write('Unauthorized Request')
+          ..write('forbidden')
           ..close();
       }
-    } else {
+    } catch (e) {
+      print(e);
       request.response
-        ..statusCode = HttpStatus.forbidden
+        ..statusCode = HttpStatus.badRequest
         ..headers.add('Content-Type', 'text/plain')
-        ..write('Forbidden')
+        ..write(e.toString())
         ..close();
     }
     return null;

@@ -18,6 +18,8 @@ class UserController {
         body: jsonEncode(user),
       );
     } catch (e) {
+      print(e);
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -48,6 +50,7 @@ class UserController {
               body: 'unable to update user',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -70,6 +73,7 @@ class UserController {
               body: 'unable to delete user',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -112,6 +116,7 @@ class UserController {
               body: 'unable to save contact',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -141,6 +146,7 @@ class UserController {
               body: 'unable to update temporary messages',
             );
     } catch (e) {
+      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.internalServerError,
         body: e.toString(),
