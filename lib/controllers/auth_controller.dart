@@ -51,7 +51,10 @@ class AuthController {
         ),
       );
       return isCreated
-          ? HttpResponseBuilder.send(request.response).ok(HttpStatus.ok)
+          ? HttpResponseBuilder.send(request.response).ok(
+              HttpStatus.ok,
+              body: jsonEncode({'token': generateJWT(json['username'])}),
+            )
           : HttpResponseBuilder.send(request.response).error(
               HttpStatus.internalServerError,
               body: 'unable to create user',

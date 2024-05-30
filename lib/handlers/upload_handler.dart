@@ -8,10 +8,7 @@ class UploadHandler extends HttpHandler {
 
   @override
   Future<void> handleGet(HttpRequest request) async {
-    final claims = await doFilter(request);
-    if (claims != null) {
-      await controller.fetchFile(request);
-    }
+    await controller.fetchFile(request);
   }
 
   @override
