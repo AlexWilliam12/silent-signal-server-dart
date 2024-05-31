@@ -17,7 +17,7 @@ void main() async {
 
   try {
     final socket = await WebSocket.connect(
-      'ws://192.168.0.117:8080/chat/private',
+      'ws://192.168.0.141:8080/chat/private',
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -32,7 +32,6 @@ void main() async {
         print(error);
         await socket.close();
       },
-      cancelOnError: true,
     );
 
     await _sendMessage(socket, recipient);

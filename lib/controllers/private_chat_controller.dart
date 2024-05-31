@@ -36,8 +36,14 @@ class PrivateChatController {
         messages
             .map(
               (message) => {
-                'sender': message.sender.name,
-                'recipient': message.recipient.name,
+                'sender': {
+                  'name': message.sender.name,
+                  'picture': message.sender.picture,
+                },
+                'recipient': {
+                  'name': message.recipient.name,
+                  'picture': message.recipient.picture,
+                },
                 'type': message.type,
                 'content': message.content,
                 'created_at': message.createdAt!.toIso8601String(),
@@ -51,16 +57,9 @@ class PrivateChatController {
         (content) async {
           try {
             if (content is String) {
-              final message = jsonDecode(content);
-              await _handleMessage(user, message);
-              socket.add(
-                jsonEncode({
-                  'sender': user.name,
-                  'recipient': message['recipient'],
-                  'type': message['type'],
-                  'content': message['content'],
-                }),
-              );
+              final decodedMessage = jsonDecode(content);
+              final message = await _handleMessage(user, decodedMessage);
+              socket.add(message);
             } else {
               socket.add('invalid input type');
               await socket.close();
@@ -72,7 +71,6 @@ class PrivateChatController {
           }
         },
         onDone: () {
-          print('client close connection');
           broadcast.remove(user.name);
         },
         onError: (error) {
@@ -88,38 +86,46 @@ class PrivateChatController {
     }
   }
 
-  Future<void> _handleMessage(SensitiveUser sender, message) async {
+  Future<String> _handleMessage(SensitiveUser sender, decodedMessage) async {
     try {
       final recipient = await userRepository.fetchByUsername(
-        message['recipient']!,
+        decodedMessage['recipient']!,
       );
       if (recipient == null) {
         throw ArgumentError('recipient not found');
       }
+
+      String message = jsonEncode({
+        'sender': {
+          'name': sender.name,
+          'picture': sender.picture,
+        },
+        'recipient': {
+          'name': recipient.name,
+          'picture': recipient.picture,
+        },
+        'type': decodedMessage['type'],
+        'content': decodedMessage['content'],
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
       final socket = broadcast[recipient.name];
       bool isPending = true;
       if (socket != null) {
-        socket.add(
-          jsonEncode({
-            'sender': sender.name,
-            'recipient': recipient.name,
-            'type': message['type'],
-            'content': message['content'],
-            'created_at': DateTime.now().toIso8601String(),
-          }),
-        );
+        socket.add(message);
         isPending = false;
       }
       messageRepository.savePrivateMessage(
         PrivateMessage.dto(
-          type: message['type'],
-          content: message['content'],
+          type: decodedMessage['type'],
+          content: decodedMessage['content'],
           isPending: isPending,
           sender: User.id(id: sender.id),
           recipient: User.id(id: recipient.id),
           isTemporaryMessage: sender.temporaryMessageInterval != null,
         ),
       );
+      return message;
     } catch (e) {
       rethrow;
     }

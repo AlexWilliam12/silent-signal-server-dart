@@ -15,10 +15,10 @@ class AuthHandler extends HttpHandler {
       case '/auth/register':
         await controller.register(request);
         break;
-      case '/auth/validate-token':
+      case '/auth/validate/token':
         await controller.validateToken(request);
         break;
-      case '/auth/validate-hash':
+      case '/auth/validate/hash':
         await controller.validateHash(request);
         break;
       default:

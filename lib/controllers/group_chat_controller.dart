@@ -47,8 +47,14 @@ class GroupChatController {
           messages
               .map(
                 (message) => {
-                  'sender': message.sender.name,
-                  'group': message.group.name,
+                  'sender': {
+                    'name': message.sender.name,
+                    'picture': message.sender.picture,
+                  },
+                  'group': {
+                    'name': message.group.name,
+                    'picture': message.group.picture,
+                  },
                   'type': message.type,
                   'content': message.content,
                   'created_at': message.createdAt!.toIso8601String(),
@@ -63,17 +69,10 @@ class GroupChatController {
         (content) async {
           try {
             if (content is String) {
-              final message = jsonDecode(content);
-              selectedGroup = message['group'];
-              await _handleMessage(user, message);
-              socket.add(
-                jsonEncode({
-                  'sender': user.name,
-                  'group': selectedGroup,
-                  'type': message['type'],
-                  'content': message['content'],
-                }),
-              );
+              final decodedMessage = jsonDecode(content);
+              selectedGroup = decodedMessage['group'];
+              final message = await _handleMessage(user, decodedMessage);
+              socket.add(message);
             } else {
               socket.add('invalid input type');
               await socket.close();
@@ -85,7 +84,6 @@ class GroupChatController {
           }
         },
         onDone: () {
-          print('client close connection');
           final groupBroadcast = broadcast[selectedGroup];
           if (groupBroadcast != null) {
             groupBroadcast.removeWhere(
@@ -116,39 +114,43 @@ class GroupChatController {
     }
   }
 
-  Future<void> _handleMessage(SensitiveUser user, message) async {
-    final groupBroadcast = broadcast[message['group']];
+  Future<String> _handleMessage(SensitiveUser user, decodedMessage) async {
+    final group = await groupRepository.fetchByGroupName(
+      decodedMessage['group'],
+    );
+
+    String message = jsonEncode({
+      'sender': {
+        'name': user.name,
+        'picture': user.picture,
+      },
+      'group': {
+        'name': group!.name,
+        'picture': group.picture,
+      },
+      'type': decodedMessage['type'],
+      'content': decodedMessage['content'],
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    final groupBroadcast = broadcast[decodedMessage['group']];
     final seenBy = <User>[];
     if (groupBroadcast != null) {
       for (final members in groupBroadcast) {
         for (final entry in members.entries) {
           if (entry.key != user.name) {
-            entry.value.add(
-              jsonEncode({
-                'sender': user.name,
-                'group': message['group'],
-                'type': message['type'],
-                'content': message['content'],
-                'created_at': DateTime.now().toIso8601String(),
-              }),
-            );
-            seenBy.add(
-              User.dto(
-                name: entry.key,
-                picture: null,
-              ),
-            );
+            entry.value.add(message);
+            seenBy.add(User.dto(name: entry.key, picture: null));
           }
         }
       }
     }
-    final group = await groupRepository.fetchByGroupName(message['group']);
     final groupMessageId = await messageRepository.saveGroupMessage(
       GroupMessage.dto(
-        type: message['type'],
-        content: message['content'],
+        type: decodedMessage['type'],
+        content: decodedMessage['content'],
         sender: User.id(id: user.id),
-        group: group!,
+        group: group,
       ),
     );
     messageRepository.updateGroupMessagesPendingSituationAfter(
@@ -156,6 +158,7 @@ class GroupChatController {
       user.id!,
       group.id!,
     );
+    return message;
   }
 
   Future<void> _updatePendingSituation(

@@ -32,7 +32,6 @@ void main() async {
         print(error);
         await socket.close();
       },
-      cancelOnError: true,
     );
 
     await _sendMessage(socket, group);
