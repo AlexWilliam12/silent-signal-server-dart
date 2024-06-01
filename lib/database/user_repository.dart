@@ -45,9 +45,10 @@ class SensitiveUserRepository {
         credentialsHash: row[3] as String,
         picture: row[4] as String?,
         createdAt: row[5] as DateTime,
+        temporaryMessageInterval: row[6] as Interval?,
       );
-      if (row[6] != null) {
-        final list = row[6] as List<dynamic>;
+      if (row[7] != null) {
+        final list = row[7] as List<dynamic>;
         for (final element in list) {
           user.contacts.add(
             User.dto(
@@ -57,8 +58,8 @@ class SensitiveUserRepository {
           );
         }
       }
-      if (row[7] != null) {
-        final list = row[7] as List<dynamic>;
+      if (row[8] != null) {
+        final list = row[8] as List<dynamic>;
         for (final element in list) {
           user.createdGroups.add(
             Group.model(
@@ -72,8 +73,8 @@ class SensitiveUserRepository {
           );
         }
       }
-      if (row[8] != null) {
-        final list = row[8] as List<dynamic>;
+      if (row[9] != null) {
+        final list = row[9] as List<dynamic>;
         for (final element in list) {
           user.parcipateGroups.add(
             Group.model(
@@ -122,6 +123,7 @@ class SensitiveUserRepository {
         credentialsHash: row[3] as String,
         picture: row[4] as String?,
         createdAt: row[5] as DateTime,
+        temporaryMessageInterval: row[6] as Interval?,
       );
     } catch (e) {
       rethrow;
@@ -151,6 +153,7 @@ class SensitiveUserRepository {
         credentialsHash: row[3] as String,
         picture: row[4] as String?,
         createdAt: row[5] as DateTime,
+        temporaryMessageInterval: row[6] as Interval?,
       );
     } catch (e) {
       rethrow;
@@ -180,8 +183,8 @@ class SensitiveUserRepository {
         credentialsHash: row[3] as String,
         picture: row[4] as String?,
         createdAt: row[5] as DateTime,
+        temporaryMessageInterval: row[6] as Interval?,
       );
-      user.temporaryMessageInterval = row[6] as String?;
       return user;
     } catch (e) {
       rethrow;
@@ -263,11 +266,12 @@ class SensitiveUserRepository {
       conn = await ConnectionManager.getConnection();
       return await conn.runTx((session) async {
         final result = await session.execute(
-          Sql.named(ENABLE_TEMPORARY_MESSAGES),
-          parameters: {
-            'username': username,
-            'interval': time,
-          },
+          Sql.named('''
+          UPDATE users SET
+            temporary_message_interval = ${time != null ? "INTERVAL '$time'" : "NULL"}
+          WHERE username = @username
+          '''),
+          parameters: {'username': username},
         );
         return result.affectedRows > 0;
       });

@@ -8,6 +8,7 @@ const FETCH_USER_DATA_QUERY = r'''
     u.credentials_hash,
     u.picture,
     u.created_at,
+    u.temporary_message_interval,
     (
       SELECT JSON_AGG(
         JSON_BUILD_OBJECT(
@@ -91,7 +92,8 @@ const FETCH_USER_BY_CREDENTIALS = r'''
     password,
     credentials_hash,
     picture,
-    created_at
+    created_at,
+    temporary_message_interval
   FROM users 
   WHERE username = $1 AND password = $2
 ''';
@@ -103,7 +105,8 @@ const FETCH_USER_BY_HASH = r'''
     password,
     credentials_hash,
     picture,
-    created_at
+    created_at,
+    temporary_message_interval
   FROM users 
   WHERE credentials_hash = $1
 ''';
@@ -140,10 +143,4 @@ const SAVE_USE_CONTACT = r'''
     user_id,
     contact_id
   ) VALUES ($1, $2)
-''';
-
-const ENABLE_TEMPORARY_MESSAGES = '''
-  UPDATE users SET
-    temporary_message_interval = INTERVAL @interval
-  WHERE username = @username
 ''';

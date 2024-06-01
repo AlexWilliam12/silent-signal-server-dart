@@ -19,7 +19,6 @@ class UserController {
       );
     } catch (e) {
       print(e);
-      print(e);
       return HttpResponseBuilder.send(request.response).error(
         HttpStatus.badRequest,
         body: e.toString(),
@@ -134,10 +133,9 @@ class UserController {
       final body = await utf8.decoder.bind(request).join();
       final json = jsonDecode(body);
 
-      user!.temporaryMessageInterval = json['time'];
       final isUpdated = await repository.updateTemporaryMessages(
-        user.name,
-        user.temporaryMessageInterval,
+        user!.name,
+        json['time'],
       );
       return isUpdated
           ? HttpResponseBuilder.send(request.response).ok(HttpStatus.ok)
