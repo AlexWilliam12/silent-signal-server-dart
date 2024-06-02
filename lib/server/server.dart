@@ -85,6 +85,7 @@ class Server {
       '/user ${HttpMethod.PUT.name}': UserHandler(),
       '/user ${HttpMethod.DELETE.name}': UserHandler(),
       '/user/contact ${HttpMethod.POST.name}': UserHandler(),
+      '/user/contact ${HttpMethod.DELETE.name}': UserHandler(),
       '/user/temporary/messages ${HttpMethod.POST.name}': UserHandler(),
       '/group ${HttpMethod.GET.name}': GroupHandler(),
       '/group ${HttpMethod.POST.name}': GroupHandler(),

@@ -11,7 +11,7 @@ class SensitiveUser {
   DateTime? createdAt;
   Interval? temporaryMessageInterval;
   final List<Group> createdGroups = [];
-  final List<Group> parcipateGroups = [];
+  final List<Group> participateGroups = [];
   final List<User> contacts = [];
 
   SensitiveUser.dto({
@@ -39,7 +39,7 @@ class SensitiveUser {
       'created_at': createdAt!.toIso8601String(),
       'time': temporaryMessageInterval?.toString(),
       'created_groups': createdGroups,
-      'parcipate_groups': parcipateGroups,
+      'participate_groups': participateGroups,
       'contacts': contacts,
     };
   }

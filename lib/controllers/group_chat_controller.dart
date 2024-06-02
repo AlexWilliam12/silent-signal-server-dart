@@ -31,7 +31,7 @@ class GroupChatController {
 
     var selectedGroup = '';
     try {
-      for (final group in user!.parcipateGroups) {
+      for (final group in user!.participateGroups) {
         if (broadcast.containsKey(group.name)) {
           final groupBroadcast = broadcast[group.name]!;
           groupBroadcast.add({user.name: socket});

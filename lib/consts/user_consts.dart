@@ -138,9 +138,16 @@ const DELETE_USER = r'''
   WHERE id = $1
 ''';
 
-const SAVE_USE_CONTACT = r'''
+const SAVE_CONTACT = r'''
   INSERT INTO contacts(
     user_id,
     contact_id
   ) VALUES ($1, $2)
+  ON CONFLICT (user_id, contact_id) DO NOTHING
+''';
+
+const DELETE_CONTACT = r'''
+  DELETE FROM contacts
+  WHERE user_id = $1
+  AND contact_id = $2
 ''';

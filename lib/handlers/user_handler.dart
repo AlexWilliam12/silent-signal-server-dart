@@ -45,7 +45,18 @@ class UserHandler extends HttpHandler {
   Future<void> handleDelete(HttpRequest request) async {
     final claims = await doFilter(request);
     if (claims != null) {
-      await controller.delete(request, claims);
+      final path = request.uri.path;
+      if (path == '/user') {
+        await controller.delete(request, claims);
+      } else if (path == '/user/contact') {
+        await controller.deleteContact(request, claims);
+      } else {
+        request.response
+          ..statusCode = HttpStatus.notFound
+          ..headers.add('Content-Type', 'text/plain')
+          ..write('route not found')
+          ..close();
+      }
     }
   }
 }

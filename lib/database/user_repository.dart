@@ -76,7 +76,7 @@ class SensitiveUserRepository {
       if (row[9] != null) {
         final list = row[9] as List<dynamic>;
         for (final element in list) {
-          user.parcipateGroups.add(
+          user.participateGroups.add(
             Group.model(
               id: element['id'],
               name: element['group_name'],
@@ -246,7 +246,27 @@ class SensitiveUserRepository {
       conn = await ConnectionManager.getConnection();
       return await conn.runTx((session) async {
         final result = await session.execute(
-          SAVE_USE_CONTACT,
+          SAVE_CONTACT,
+          parameters: [userId, contactId],
+        );
+        return result.affectedRows > 0;
+      });
+    } catch (e) {
+      rethrow;
+    } finally {
+      if (conn != null) {
+        await conn.close();
+      }
+    }
+  }
+
+  Future<bool> deleteContact(int userId, int contactId) async {
+    Connection? conn;
+    try {
+      conn = await ConnectionManager.getConnection();
+      return await conn.runTx((session) async {
+        final result = await session.execute(
+          DELETE_CONTACT,
           parameters: [userId, contactId],
         );
         return result.affectedRows > 0;
