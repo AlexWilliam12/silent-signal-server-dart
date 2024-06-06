@@ -7,9 +7,6 @@ import 'package:silent_signal/database/group_repository.dart';
 import 'package:silent_signal/database/message_repository.dart';
 import 'package:silent_signal/database/upload_repository.dart';
 import 'package:silent_signal/database/user_repository.dart';
-import 'package:silent_signal/models/group_message.dart';
-import 'package:silent_signal/models/private_message.dart';
-import 'package:silent_signal/models/user.dart';
 import 'package:silent_signal/server/http_response_builder.dart';
 
 class UploadController {
@@ -109,35 +106,11 @@ class UploadController {
     }
   }
 
-  Future<HttpResponseBuilder> uploadPrivateChatFile(
+  Future<HttpResponseBuilder> uploadChatFile(
     HttpRequest request,
     Map<String, dynamic> claims,
   ) async {
     try {
-      final sender = await userRepository.fetchByUsername(claims['username']!);
-      final recipientParameter = request.uri.queryParameters['recipient'];
-      if (recipientParameter == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.badRequest,
-          body: "query key 'recipient' was not found",
-        );
-      }
-      final typeParameter = request.uri.queryParameters['type'];
-      if (typeParameter == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.badRequest,
-          body: "query key 'type' was not found",
-        );
-      }
-      final recipient = await userRepository.fetchByUsername(
-        recipientParameter,
-      );
-      if (recipient == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.notFound,
-          body: 'recipient not found',
-        );
-      }
       final path = await _upload(request);
       if (path == null) {
         return HttpResponseBuilder.send(request.response).error(
@@ -145,79 +118,7 @@ class UploadController {
           body: 'unable to upload picture',
         );
       }
-      final isSaved = await messageRepository.savePrivateMessage(
-        PrivateMessage.dto(
-          type: typeParameter,
-          content: path,
-          isPending: true,
-          sender: User.id(id: sender!.id),
-          recipient: User.id(id: recipient.id),
-          isTemporaryMessage: sender.temporaryMessageInterval != null,
-        ),
-      );
-      return isSaved
-          ? HttpResponseBuilder.send(request.response).created(path)
-          : HttpResponseBuilder.send(request.response).error(
-              HttpStatus.badRequest,
-              body: 'unable to upload picture',
-            );
-    } catch (e) {
-      print(e);
-      return HttpResponseBuilder.send(request.response).error(
-        HttpStatus.badRequest,
-        body: e.toString(),
-      );
-    }
-  }
-
-  Future<HttpResponseBuilder> uploadGroupChatFile(
-    HttpRequest request,
-    Map<String, dynamic> claims,
-  ) async {
-    try {
-      final sender = await userRepository.fetchByUsername(claims['username']!);
-      final groupParameter = request.uri.queryParameters['group'];
-      if (groupParameter == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.badRequest,
-          body: "query key 'group' was not found",
-        );
-      }
-      final typeParameter = request.uri.queryParameters['type'];
-      if (typeParameter == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.badRequest,
-          body: "query key 'type' was not found",
-        );
-      }
-      final group = await groupRepository.fetchByGroupName(groupParameter);
-      if (group == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.notFound,
-          body: 'group not found',
-        );
-      }
-      final path = await _upload(request);
-      if (path == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.internalServerError,
-          body: 'unable to upload picture',
-        );
-      }
-      final isSaved = await messageRepository.saveGroupMessage(
-        GroupMessage.dto(
-          type: typeParameter,
-          content: path,
-          sender: User.id(id: sender!.id),
-          group: group,
-        ),
-      );
-      return isSaved != 0
-          ? HttpResponseBuilder.send(request.response).created(path)
-          : HttpResponseBuilder.send(request.response).error(
-              HttpStatus.badRequest,
-              body: 'unable to upload picture',
-            );
+      return HttpResponseBuilder.send(request.response).created(path);
     } catch (e) {
       print(e);
       return HttpResponseBuilder.send(request.response).error(

@@ -68,7 +68,7 @@ class GroupController {
         Group.dto(
           name: json['group_name']!,
           description: json['description'],
-          picture: json['picture'],
+          picture: null,
           creator: User.id(id: user!.id),
         ),
       );
@@ -78,7 +78,7 @@ class GroupController {
           body: 'unable to create group',
         );
       }
-      groupRepository.saveGroupMember(groupId, user.id!);
+      await groupRepository.saveGroupMember(groupId, user.id!);
       return HttpResponseBuilder.send(request.response).ok(HttpStatus.ok);
     } catch (e) {
       print(e);
@@ -197,8 +197,10 @@ class GroupController {
           body: 'group not found',
         );
       }
-      final isSaved =
-          await groupRepository.saveGroupMember(group.id!, user!.id!);
+      final isSaved = await groupRepository.saveGroupMember(
+        group.id!,
+        user!.id!,
+      );
       return isSaved
           ? HttpResponseBuilder.send(request.response).ok(HttpStatus.ok)
           : HttpResponseBuilder.send(request.response).error(

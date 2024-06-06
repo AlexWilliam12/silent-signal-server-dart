@@ -35,20 +35,48 @@ class GroupRepository {
       final result = await conn.execute(FETCH_GROUPS);
       List<Group> groups = [];
       for (final row in result) {
-        final creator = jsonDecode(row[4].toString());
-        groups.add(
-          Group.model(
-            id: row[0] as int,
-            name: row[1] as String,
-            description: row[2] as String?,
-            picture: row[3] as String?,
-            creator: User.dto(
-              name: creator['name'],
-              picture: creator['picture'],
-            ),
-            createdAt: row[5] as DateTime,
+        final creator = row[4] as Map<String, dynamic>;
+        final group = Group.model(
+          id: row[0] as int,
+          name: row[1] as String,
+          description: row[2] as String?,
+          picture: row[3] as String?,
+          creator: User.dto(
+            name: creator['name'],
+            picture: creator['picture'],
           ),
+          createdAt: row[7] as DateTime,
         );
+        if (row[5] != null) {
+          final list = row[5] as List;
+          for (var element in list) {
+            group.members.add(
+              User.dto(
+                name: element['name'],
+                picture: element['picture'],
+              ),
+            );
+          }
+        }
+        if (row[6] != null) {
+          final list = row[6] as List;
+          for (var element in list) {
+            group.messages.add(
+              GroupMessage.model(
+                id: element['id'],
+                type: element['type'],
+                content: element['content'],
+                sender: User.dto(
+                  name: element['sender']['name'],
+                  picture: element['sender']['picture'],
+                ),
+                group: group,
+                createdAt: DateTime.parse(element['createdAt']),
+              ),
+            );
+          }
+        }
+        groups.add(group);
       }
       return groups;
     } catch (e) {

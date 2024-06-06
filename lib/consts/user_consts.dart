@@ -21,7 +21,7 @@ const FETCH_USER_DATA_QUERY = r'''
           c.username,
           c.picture
         FROM users c
-        JOIN contacts uc ON uc.contact_id = c.id -- Corrigi aqui
+        JOIN contacts uc ON uc.contact_id = c.id
         WHERE uc.user_id = u.id
       ) AS c
     ) AS contacts,
@@ -32,7 +32,9 @@ const FETCH_USER_DATA_QUERY = r'''
           'group_name', cg.group_name,
           'description', cg.description,
           'group_picture', cg.group_picture,
-          'created_at', cg.created_at
+          'created_at', cg.created_at,
+          'creator_name', u.username,
+          'creator_picture', u.picture
         )
       )
       FROM (
@@ -144,10 +146,4 @@ const SAVE_CONTACT = r'''
     contact_id
   ) VALUES ($1, $2)
   ON CONFLICT (user_id, contact_id) DO NOTHING
-''';
-
-const DELETE_CONTACT = r'''
-  DELETE FROM contacts
-  WHERE user_id = $1
-  AND contact_id = $2
 ''';

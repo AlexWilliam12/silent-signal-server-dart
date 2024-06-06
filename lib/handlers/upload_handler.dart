@@ -23,11 +23,8 @@ class UploadHandler extends HttpHandler {
         case '/upload/group/picture':
           await controller.uploadGroupPicture(request, claims);
           break;
-        case '/upload/private/chat':
-          await controller.uploadPrivateChatFile(request, claims);
-          break;
-        case '/upload/group/chat':
-          await controller.uploadGroupChatFile(request, claims);
+        case '/upload/chat/file':
+          await controller.uploadChatFile(request, claims);
           break;
         default:
           request.response

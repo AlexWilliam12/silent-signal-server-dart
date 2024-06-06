@@ -1,7 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:silent_signal/configs/environment.dart';
+import 'package:silent_signal/configs/initializer.dart';
+
 void main() async {
+  await Initializer.initEnv();
+
   print('Enter your token:');
   final token = stdin.readLineSync();
   if (token == null) {
@@ -17,7 +22,7 @@ void main() async {
 
   try {
     final socket = await WebSocket.connect(
-      'ws://192.168.0.141:8080/chat/private',
+      'ws://${Environment.getProperty('SERVER_HOST')}:${Environment.getProperty('SERVER_PORT')}/chat/private',
       headers: {'Authorization': 'Bearer $token'},
     );
 

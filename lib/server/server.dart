@@ -98,8 +98,7 @@ class Server {
       '/upload/user/picture ${HttpMethod.PUT.name}': UploadHandler(),
       '/upload/group/picture ${HttpMethod.POST.name}': UploadHandler(),
       '/upload/group/picture ${HttpMethod.PUT.name}': UploadHandler(),
-      '/upload/private/chat ${HttpMethod.POST.name}': UploadHandler(),
-      '/upload/group/chat ${HttpMethod.POST.name}': UploadHandler(),
+      '/upload/chat/file ${HttpMethod.POST.name}': UploadHandler(),
       '/chat/private ${HttpMethod.GET.name}': WebsocketHandler(),
       '/chat/group ${HttpMethod.GET.name}': WebsocketHandler(),
     };

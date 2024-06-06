@@ -128,28 +128,28 @@ class UserController {
     Map<String, dynamic> claims,
   ) async {
     try {
-      final parameter = request.uri.queryParameters['name'];
-      if (parameter == null || parameter.isEmpty) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.badRequest,
-          body: "query parameter cannot be empty",
-        );
-      }
-      final user = await repository.fetchByUsername(claims['username']);
+      final user = await repository.fetchData(claims['username']);
       if (user == null) {
         return HttpResponseBuilder.send(request.response).error(
           HttpStatus.notFound,
           body: "User '${claims['username']}' Not Found",
         );
       }
-      final contact = await repository.fetchByUsername(parameter);
-      if (contact == null) {
-        return HttpResponseBuilder.send(request.response).error(
-          HttpStatus.notFound,
-          body: "user '$parameter' not found",
-        );
-      }
-      return await repository.deleteContact(user.id!, contact.id!)
+      final body = await utf8.decoder.bind(request).join();
+      final json = jsonDecode(body) as List;
+
+      final contacts = user.contacts.map((contact) => contact.name!).where(
+        (contact) {
+          for (var element in json) {
+            if (element['name'] == contact) {
+              return true;
+            }
+          }
+          return false;
+        },
+      ).toList();
+
+      return await repository.deleteContacts(user.id!, contacts)
           ? HttpResponseBuilder.send(request.response).ok(
               HttpStatus.ok,
             )

@@ -67,7 +67,10 @@ class SensitiveUserRepository {
               name: element['group_name'] as String,
               description: element['description'] as String?,
               picture: element['group_picture'] as String?,
-              creator: User.id(id: null),
+              creator: User.dto(
+                name: element['creator_name'],
+                picture: element['creator_picture'],
+              ),
               createdAt: DateTime.parse(element['created_at']),
             ),
           );
@@ -260,14 +263,31 @@ class SensitiveUserRepository {
     }
   }
 
-  Future<bool> deleteContact(int userId, int contactId) async {
+  Future<bool> deleteContacts(int userId, List<String> contacts) async {
     Connection? conn;
     try {
+      final placeholder = List.generate(
+        contacts.length,
+        (index) => '@username$index',
+      ).join(',');
+      Map<String, dynamic> parameters = {
+        'user_id': userId,
+      };
+      for (int i = 0; i < contacts.length; i++) {
+        parameters['username$i'] = contacts[i];
+      }
       conn = await ConnectionManager.getConnection();
       return await conn.runTx((session) async {
         final result = await session.execute(
-          DELETE_CONTACT,
-          parameters: [userId, contactId],
+          Sql.named('''
+          DELETE FROM contacts
+          WHERE user_id = @user_id
+          AND contact_id IN (
+            SELECT id FROM users
+            WHERE username IN ($placeholder)
+          )
+          '''),
+          parameters: parameters,
         );
         return result.affectedRows > 0;
       });
